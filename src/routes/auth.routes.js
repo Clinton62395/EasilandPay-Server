@@ -1,17 +1,10 @@
 import express from "express";
 import {
-  createUser,
-  deleteUser,
-  getAllUsers,
-  getUserById,
-  hardDeleteUser,
-  login,
-  updateUser,
-} from "../controllers/Auth.controller.js";
-import {
   loginValidator,
   registerValidator,
 } from "../validations/auth.validators.js";
+import { deleteUser, getAllUsers, getUserById, hardDeleteUser, login, register, updateUser } from "../controllers/Auth.controller.js";
+
 
 const router = express.Router();
 
@@ -116,7 +109,7 @@ router.get("/", getAllUsers);
  *                   type: string
  *                   example: "Email already exists"
  */
-router.post("/", registerValidator, createUser);
+router.post("/", registerValidator, register);
 
 /**
  * @swagger

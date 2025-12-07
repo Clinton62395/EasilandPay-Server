@@ -2769,3 +2769,8 @@
 {"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-07T16:51:16.720Z"}
 {"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-07T16:51:21.331Z"}
 {"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-07T16:51:21.338Z"}
+{"level":"info","message":"📚 Swagger Documentation available at: http://localhost:5000/api-docs","timestamp":"2025-12-07T16:53:23.510Z"}
+{"level":"info","message":"📄 Swagger JSON spec available at: http://localhost:5000/api-docs.json","timestamp":"2025-12-07T16:53:23.515Z"}
+{"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-07T16:53:23.516Z"}
+{"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-07T16:53:26.465Z"}
+{"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-07T16:53:26.472Z"}

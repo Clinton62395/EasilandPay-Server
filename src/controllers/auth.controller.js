@@ -13,7 +13,7 @@ dotenv.config();
  * @route   POST /api/users
  * @access  Public
  */
-export const createUser = catchAsynch(async (req, res, next) => {
+export const register = catchAsynch(async (req, res, next) => {
   const data = req.body;
 
   const { fullName } = data;
@@ -51,6 +51,7 @@ export const createUser = catchAsynch(async (req, res, next) => {
     refreshToken,
   });
 });
+
 
 export const login = catchAsynch(async (req, res, next) => {
   const { email, password } = req.body;
