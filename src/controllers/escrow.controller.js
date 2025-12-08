@@ -1,507 +1,290 @@
-import Escrow from "../models/Escrow.models.js";
-import { AppError } from "../utils/appError.utils.js";
+
+// =============================================
+// CONTROLLERS/USER.CONTROLLER.JS
+// Gestion des routes - appelle le service
+// =============================================
+
+import userService from "../services/user.service.js";
 import { catchAsynch } from "../utils/catchAsynch.utils.js";
+import { AppError } from "../utils/appError.utils.js";
 
 // ============================================
-// CREATE ESCROW
-// ============================================
-/**
- * @desc    Create a new escrow
- * @route   POST /api/escrows
- * @access  Private (Buyer/Admin)
- */
-export const createEscrow = catchAsynch(async (req, res, next) => {
-  // All validations are handled by express-validator middleware
-  const newEscrow = await Escrow.create(req.body);
-
-  // Populate references
-  await newEscrow.populate([
-    { path: "propertyId", select: "title location priceInKobo" },
-    { path: "buyerId", select: "firstName lastName email" },
-    { path: "realtorId", select: "firstName lastName email realtorInfo" },
-  ]);
-
-  // Create commission record if realtor exists
-  if (newEscrow.realtorId && newEscrow.commission.amountInKobo > 0) {
-    await Commission.create({
-      realtorId: newEscrow.realtorId,
-      escrowId: newEscrow._id,
-      propertyId: newEscrow.propertyId,
-      buyerId: newEscrow.buyerId,
-      totalCommissionInKobo: newEscrow.commission.amountInKobo,
-      commissionPercentage: newEscrow.commission.percentage,
-      status: "PENDING",
-    });
-  }
-
-  res.status(201).json({
-    success: true,
-    message: "Escrow created successfully",
-    data: newEscrow,
-  });
-});
-
-// ============================================
-// GET ALL ESCROWS
+// RÉCUPÉRER MON PROFIL
 // ============================================
 /**
- * @desc    Get all escrows with optional filters
- * @route   GET /api/escrows
- * @query   buyerId, propertyId, realtorId, status, page, limit
- * @access  Private (Admin/Staff)
+ * @desc    Get current user profile
+ * @route   GET /api/users/me
+ * @access  Private
  */
-export const getAllEscrows = catchAsynch(async (req, res, next) => {
-  const {
-    buyerId,
-    propertyId,
-    realtorId,
-    status,
-    page = 1,
-    limit = 10,
-  } = req.query;
-
-  // Build filter dynamically
-  const filter = {};
-  if (buyerId) filter.buyerId = buyerId;
-  if (propertyId) filter.propertyId = propertyId;
-  if (realtorId) filter.realtorId = realtorId;
-  if (status) filter.status = status;
-
-  // Calculate pagination
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-
-  // Get escrows with filter and pagination
-  const escrows = await Escrow.find(filter)
-    .populate("propertyId", "title location priceInKobo")
-    .populate("buyerId", "firstName lastName email")
-    .populate("realtorId", "firstName lastName email")
-    .limit(parseInt(limit))
-    .skip(skip)
-    .sort({ createdAt: -1 });
-
-  // Get total count
-  const total = await Escrow.countDocuments(filter);
+export const getMe = catchAsynch(async (req, res, next) => {
+  // req.user est ajouté par le middleware d'authentification
+  const user = await userService.getUserById(req.user.id);
 
   res.status(200).json({
     success: true,
-    count: escrows.length,
-    total,
-    page: parseInt(page),
-    pages: Math.ceil(total / parseInt(limit)),
-    data: escrows,
+    data: user,
   });
 });
 
 // ============================================
-// GET ESCROW BY ID
+// METTRE À JOUR MON PROFIL
 // ============================================
 /**
- * @desc    Get a single escrow by ID
- * @route   GET /api/escrows/:id
- * @access  Private (Buyer/Realtor/Admin)
+ * @desc    Update current user profile
+ * @route   PUT /api/users/me
+ * @access  Private
  */
-export const getEscrowById = catchAsynch(async (req, res, next) => {
+export const updateMe = catchAsynch(async (req, res, next) => {
+  // Validations déjà gérées par express-validator
+  const updates = req.body;
+
+  // Empêcher la mise à jour de certains champs via cette route
+  if (updates.password || updates.email || updates.role) {
+    return next(
+      new AppError(
+        "Please use appropriate endpoints to update email, password or role",
+        400
+      )
+    );
+  }
+
+  const user = await userService.updateUserProfile(req.user.id, updates);
+
+  res.status(200).json({
+    success: true,
+    message: "Profile updated successfully",
+    data: user,
+  });
+});
+
+// ============================================
+// CHANGER MON MOT DE PASSE
+// ============================================
+/**
+ * @desc    Update user password
+ * @route   PUT /api/users/me/password
+ * @access  Private
+ */
+export const updatePassword = catchAsynch(async (req, res, next) => {
+  // Validations déjà gérées par express-validator
+  const { currentPassword, newPassword } = req.body;
+
+  const result = await userService.updatePassword(
+    req.user.id,
+    currentPassword,
+    newPassword
+  );
+
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+});
+
+// ============================================
+// RÉCUPÉRER UN UTILISATEUR PAR ID (Admin/Staff)
+// ============================================
+/**
+ * @desc    Get user by ID
+ * @route   GET /api/users/:id
+ * @access  Private (Admin/Staff)
+ */
+export const getUserById = catchAsynch(async (req, res, next) => {
+  // Validation de l'ID déjà gérée par express-validator
   const { id } = req.params;
 
-  const escrow = await Escrow.findById(id)
-    .populate("propertyId")
-    .populate("buyerId", "firstName lastName email phoneNumber")
-    .populate("realtorId", "firstName lastName email phoneNumber realtorInfo")
-    .populate("paymentPlan.installments.transactionId")
-    .populate("commission.transactionId")
-    .populate("dispute.initiatedBy", "firstName lastName email")
-    .populate("dispute.resolvedBy", "firstName lastName email");
-
-  if (!escrow) {
-    return next(new AppError("Escrow not found", 404));
-  }
+  const user = await userService.getUserById(id);
 
   res.status(200).json({
     success: true,
-    data: escrow,
+    data: user,
   });
 });
 
 // ============================================
-// UPDATE ESCROW
+// RÉCUPÉRER TOUS LES UTILISATEURS (Admin/Staff)
 // ============================================
 /**
- * @desc    Update escrow information
- * @route   PUT /api/escrows/:id
+ * @desc    Get all users with filters and pagination
+ * @route   GET /api/users
+ * @query   role, isActive, search, page, limit
  * @access  Private (Admin/Staff)
  */
-export const updateEscrow = catchAsynch(async (req, res, next) => {
+export const getAllUsers = catchAsynch(async (req, res, next) => {
+  // Validations déjà gérées par express-validator
+  const { role, isActive, search, page = 1, limit = 20 } = req.query;
+
+  const filters = { role, isActive, search };
+
+  const result = await userService.getAllUsers(filters, page, limit);
+
+  res.status(200).json({
+    success: true,
+    count: result.users.length,
+    pagination: result.pagination,
+    data: result.users,
+  });
+});
+
+// ============================================
+// RÉCUPÉRER LES UTILISATEURS PAR RÔLE (Admin/Staff)
+// ============================================
+/**
+ * @desc    Get all users of a specific role
+ * @route   GET /api/users/role/:role
+ * @access  Private (Admin/Staff)
+ */
+export const getUsersByRole = catchAsynch(async (req, res, next) => {
+  // Validation déjà gérée par express-validator
+  const { role } = req.params;
+
+  const users = await userService.getUsersByRole(role);
+
+  res.status(200).json({
+    success: true,
+    count: users.length,
+    data: users,
+  });
+});
+
+// ============================================
+// METTRE À JOUR UN UTILISATEUR (Admin)
+// ============================================
+/**
+ * @desc    Update any user (admin only)
+ * @route   PUT /api/users/:id
+ * @access  Private (Admin only)
+ */
+export const updateUser = catchAsynch(async (req, res, next) => {
+  // Validations déjà gérées par express-validator
   const { id } = req.params;
   const updates = req.body;
 
-  const escrow = await Escrow.findByIdAndUpdate(id, updates, {
-    new: true,
-    runValidators: true,
-  })
-    .populate("propertyId", "title location")
-    .populate("buyerId", "firstName lastName email")
-    .populate("realtorId", "firstName lastName email");
-
-  if (!escrow) {
-    return next(new AppError("Escrow not found", 404));
-  }
+  const user = await userService.updateUserProfile(id, updates);
 
   res.status(200).json({
     success: true,
-    message: "Escrow updated successfully",
-    data: escrow,
+    message: "User updated successfully",
+    data: user,
   });
 });
 
 // ============================================
-// RECORD PAYMENT
+// SUSPENDRE UN UTILISATEUR (Admin)
 // ============================================
 /**
- * @desc    Record a payment for escrow
- * @route   POST /api/escrows/:id/payment
- * @access  Private (Buyer/Admin)
+ * @desc    Suspend a user account
+ * @route   PATCH /api/users/:id/suspend
+ * @access  Private (Admin only)
  */
-export const recordPayment = catchAsynch(async (req, res, next) => {
+export const suspendUser = catchAsynch(async (req, res, next) => {
+  // Validation déjà gérée par express-validator
   const { id } = req.params;
-  const { amountInKobo, transactionId, installmentIndex } = req.body;
 
-  const escrow = await Escrow.findById(id);
-
-  if (!escrow) {
-    return next(new AppError("Escrow not found", 404));
+  // Empêcher l'admin de se suspendre lui-même
+  if (id === req.user.id) {
+    return next(new AppError("You cannot suspend your own account", 400));
   }
 
-  if (escrow.status === "COMPLETED") {
-    return next(new AppError("Escrow is already completed", 400));
-  }
-
-  if (escrow.status === "CANCELLED") {
-    return next(
-      new AppError("Cannot record payment for cancelled escrow", 400)
-    );
-  }
-
-  // Update paid amount
-  escrow.paidAmountInKobo += amountInKobo;
-
-  // Update specific installment if provided
-  if (installmentIndex !== undefined) {
-    const installment = escrow.paymentPlan.installments[installmentIndex];
-    if (installment) {
-      installment.status = "PAID";
-      installment.paidAt = new Date();
-      installment.transactionId = transactionId;
-    }
-  }
-
-  // Update status
-  if (escrow.status === "CREATED") {
-    escrow.status = "ACTIVE";
-  }
-
-  // Check if fully paid
-  if (escrow.isFullyPaid()) {
-    escrow.status = "COMPLETED";
-  }
-
-  await escrow.save();
+  const user = await userService.suspendUser(id);
 
   res.status(200).json({
     success: true,
-    message: "Payment recorded successfully",
-    data: escrow,
+    message: "User suspended successfully",
+    data: user,
   });
 });
 
 // ============================================
-// INITIATE DISPUTE
+// ACTIVER UN UTILISATEUR (Admin)
 // ============================================
 /**
- * @desc    Initiate a dispute for escrow
- * @route   POST /api/escrows/:id/dispute
- * @access  Private (Buyer/Realtor)
+ * @desc    Activate a suspended user account
+ * @route   PATCH /api/users/:id/activate
+ * @access  Private (Admin only)
  */
-export const initiateDispute = catchAsynch(async (req, res, next) => {
+export const activateUser = catchAsynch(async (req, res, next) => {
+  // Validation déjà gérée par express-validator
   const { id } = req.params;
-  const { userId, reason } = req.body;
 
-  const escrow = await Escrow.findById(id);
-
-  if (!escrow) {
-    return next(new AppError("Escrow not found", 404));
-  }
-
-  if (escrow.status === "COMPLETED" || escrow.status === "CANCELLED") {
-    return next(
-      new AppError("Cannot dispute completed or cancelled escrow", 400)
-    );
-  }
-
-  if (escrow.dispute.active) {
-    return next(
-      new AppError("A dispute is already active for this escrow", 400)
-    );
-  }
-
-  // Use model method to initiate dispute
-  await escrow.initiateDispute(userId, reason);
-
-  await escrow.populate([
-    { path: "dispute.initiatedBy", select: "firstName lastName email" },
-  ]);
+  const user = await userService.activateUser(id);
 
   res.status(200).json({
     success: true,
-    message: "Dispute initiated successfully",
-    data: escrow,
+    message: "User activated successfully",
+    data: user,
   });
 });
 
 // ============================================
-// RESOLVE DISPUTE
+// SUPPRIMER UN UTILISATEUR (Admin)
 // ============================================
 /**
- * @desc    Resolve a dispute (Admin only)
- * @route   PATCH /api/escrows/:id/dispute/resolve
- * @access  Private (Admin/Staff)
+ * @desc    Permanently delete a user
+ * @route   DELETE /api/users/:id
+ * @access  Private (Admin only)
  */
-export const resolveDispute = catchAsynch(async (req, res, next) => {
+export const deleteUser = catchAsynch(async (req, res, next) => {
+  // Validation déjà gérée par express-validator
   const { id } = req.params;
-  const { adminId, resolution, newStatus } = req.body;
 
-  const escrow = await Escrow.findById(id);
-
-  if (!escrow) {
-    return next(new AppError("Escrow not found", 404));
+  // Empêcher l'admin de se supprimer lui-même
+  if (id === req.user.id) {
+    return next(new AppError("You cannot delete your own account", 400));
   }
 
-  if (!escrow.dispute.active) {
-    return next(new AppError("No active dispute found for this escrow", 400));
-  }
-
-  // Update dispute
-  escrow.dispute.active = false;
-  escrow.dispute.resolution = resolution;
-  escrow.dispute.resolvedBy = adminId;
-  escrow.dispute.resolvedAt = new Date();
-
-  // Update escrow status
-  escrow.status = newStatus;
-
-  await escrow.save();
-
-  await escrow.populate([
-    { path: "dispute.initiatedBy", select: "firstName lastName email" },
-    { path: "dispute.resolvedBy", select: "firstName lastName email" },
-  ]);
+  const result = await userService.deleteUser(id);
 
   res.status(200).json({
     success: true,
-    message: "Dispute resolved successfully",
-    data: escrow,
+    message: result.message,
   });
 });
 
 // ============================================
-// RELEASE FUNDS
+// METTRE À JOUR MES INFOS BANCAIRES (Realtor)
 // ============================================
 /**
- * @desc    Release funds from escrow
- * @route   POST /api/escrows/:id/release
- * @access  Private (Admin/Staff)
+ * @desc    Update realtor bank details for withdrawals
+ * @route   PUT /api/users/realtor/bank-details
+ * @access  Private (Realtor only)
  */
-export const releaseFunds = catchAsynch(async (req, res, next) => {
-  const { id } = req.params;
-  const { amountInKobo, reason } = req.body;
+export const updateRealtorBankDetails = catchAsynch(async (req, res, next) => {
+  // Validations déjà gérées par express-validator
+  const { accountNumber, bankCode, bankName, accountName } = req.body;
 
-  const escrow = await Escrow.findById(id);
-
-  if (!escrow) {
-    return next(new AppError("Escrow not found", 404));
+  // Vérifier que l'utilisateur connecté est bien un realtor
+  if (req.user.role !== "realtor") {
+    return next(new AppError("Only realtors can update bank details", 403));
   }
 
-  if (escrow.lockedAmountInKobo < amountInKobo) {
-    return next(
-      new AppError(
-        `Insufficient locked funds. Available: ${
-          escrow.lockedAmountInKobo / 100
-        } NGN`,
-        400
-      )
-    );
-  }
+  const bankDetails = { accountNumber, bankCode, bankName, accountName };
 
-  // Decrease locked amount
-  escrow.lockedAmountInKobo -= amountInKobo;
-
-  await escrow.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Funds released successfully",
-    data: {
-      releasedAmount: amountInKobo / 100,
-      releasedAmountInKobo: amountInKobo,
-      remainingLocked: escrow.lockedAmountInKobo / 100,
-      remainingLockedInKobo: escrow.lockedAmountInKobo,
-      reason,
-    },
-  });
-});
-
-// ============================================
-// CANCEL ESCROW
-// ============================================
-/**
- * @desc    Cancel an escrow
- * @route   PATCH /api/escrows/:id/cancel
- * @access  Private (Admin/Buyer)
- */
-export const cancelEscrow = catchAsynch(async (req, res, next) => {
-  const { id } = req.params;
-  const { reason } = req.body;
-
-  const escrow = await Escrow.findById(id);
-
-  if (!escrow) {
-    return next(new AppError("Escrow not found", 404));
-  }
-
-  if (escrow.status === "COMPLETED") {
-    return next(new AppError("Cannot cancel completed escrow", 400));
-  }
-
-  if (escrow.paidAmountInKobo > 0) {
-    return next(
-      new AppError(
-        "Cannot cancel escrow with payments made. Initiate refund instead.",
-        400
-      )
-    );
-  }
-
-  escrow.status = "CANCELLED";
-  await escrow.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Escrow cancelled successfully",
-    data: escrow,
-  });
-});
-
-// ============================================
-// COMPLETE MILESTONE
-// ============================================
-/**
- * @desc    Mark a milestone as completed
- * @route   PATCH /api/escrows/:id/milestones/:milestoneIndex/complete
- * @access  Private (Admin/Staff)
- */
-export const completeMilestone = catchAsynch(async (req, res, next) => {
-  const { id, milestoneIndex } = req.params;
-
-  const escrow = await Escrow.findById(id);
-
-  if (!escrow) {
-    return next(new AppError("Escrow not found", 404));
-  }
-
-  const milestone = escrow.milestones[parseInt(milestoneIndex)];
-
-  if (!milestone) {
-    return next(new AppError("Milestone not found", 404));
-  }
-
-  if (milestone.completed) {
-    return next(new AppError("Milestone already completed", 400));
-  }
-
-  // Mark milestone as completed
-  milestone.completed = true;
-  milestone.completedAt = new Date();
-
-  // Calculate and set released amount
-  const releaseAmount = Math.round(
-    (escrow.totalAmountInKobo * milestone.percentage) / 100
+  const user = await userService.updateRealtorBankDetails(
+    req.user.id,
+    bankDetails
   );
-  milestone.releasedAmountInKobo = releaseAmount;
-
-  // Update locked amount
-  if (escrow.lockedAmountInKobo >= releaseAmount) {
-    escrow.lockedAmountInKobo -= releaseAmount;
-  }
-
-  await escrow.save();
 
   res.status(200).json({
     success: true,
-    message: "Milestone completed successfully",
-    data: escrow,
+    message: "Bank details updated successfully",
+    data: user,
   });
 });
 
 // ============================================
-// GET ESCROW STATISTICS
+// RÉCUPÉRER LES STATISTIQUES (Admin)
 // ============================================
 /**
- * @desc    Get escrow statistics
- * @route   GET /api/escrows/stats/summary
- * @access  Private (Admin/Staff)
+ * @desc    Get user statistics and analytics
+ * @route   GET /api/users/stats/summary
+ * @access  Private (Admin only)
  */
-export const getEscrowStats = catchAsynch(async (req, res, next) => {
-  // Total escrows
-  const totalEscrows = await Escrow.countDocuments();
-
-  // Escrows by status
-  const escrowsByStatus = await Escrow.aggregate([
-    {
-      $group: {
-        _id: "$status",
-        count: { $sum: 1 },
-        totalAmount: { $sum: "$totalAmountInKobo" },
-        totalPaid: { $sum: "$paidAmountInKobo" },
-      },
-    },
-  ]);
-
-  // Total transaction volume
-  const volumeStats = await Escrow.aggregate([
-    {
-      $group: {
-        _id: null,
-        totalVolume: { $sum: "$totalAmountInKobo" },
-        totalPaid: { $sum: "$paidAmountInKobo" },
-        totalLocked: { $sum: "$lockedAmountInKobo" },
-      },
-    },
-  ]);
-
-  // Active disputes
-  const activeDisputes = await Escrow.countDocuments({
-    "dispute.active": true,
-  });
-
-  // Recent escrows
-  const recentEscrows = await Escrow.find()
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .populate("propertyId", "title")
-    .populate("buyerId", "firstName lastName")
-    .select("totalAmountInKobo status createdAt");
+export const getUserStatistics = catchAsynch(async (req, res, next) => {
+  const stats = await userService.getUserStatistics();
 
   res.status(200).json({
     success: true,
-    data: {
-      totalEscrows,
-      escrowsByStatus,
-      volumeStats: volumeStats[0] || {
-        totalVolume: 0,
-        totalPaid: 0,
-        totalLocked: 0,
-      },
-      activeDisputes,
-      recentEscrows,
-    },
+    data: stats,
   });
 });

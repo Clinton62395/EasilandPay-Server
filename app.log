@@ -2904,3 +2904,33 @@
 {"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-08T00:56:17.131Z"}
 {"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-08T00:56:22.131Z"}
 {"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-08T00:56:22.141Z"}
+{"level":"info","message":"📚 Swagger Documentation available at: http://localhost:5000/api-docs","timestamp":"2025-12-08T00:56:37.637Z"}
+{"level":"info","message":"📄 Swagger JSON spec available at: http://localhost:5000/api-docs.json","timestamp":"2025-12-08T00:56:37.641Z"}
+{"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-08T00:56:37.642Z"}
+{"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-08T00:56:41.267Z"}
+{"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-08T00:56:41.274Z"}
+{"level":"info","message":"📚 Swagger Documentation available at: http://localhost:5000/api-docs","timestamp":"2025-12-08T01:04:35.600Z"}
+{"level":"info","message":"📄 Swagger JSON spec available at: http://localhost:5000/api-docs.json","timestamp":"2025-12-08T01:04:35.608Z"}
+{"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-08T01:04:35.609Z"}
+{"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-08T01:04:40.148Z"}
+{"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-08T01:04:40.163Z"}
+{"level":"info","message":"📚 Swagger Documentation available at: http://localhost:5000/api-docs","timestamp":"2025-12-08T01:09:53.993Z"}
+{"level":"info","message":"📄 Swagger JSON spec available at: http://localhost:5000/api-docs.json","timestamp":"2025-12-08T01:09:53.997Z"}
+{"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-08T01:09:53.999Z"}
+{"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-08T01:09:58.239Z"}
+{"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-08T01:09:58.247Z"}
+{"level":"info","message":"📚 Swagger Documentation available at: http://localhost:5000/api-docs","timestamp":"2025-12-08T01:10:19.943Z"}
+{"level":"info","message":"📄 Swagger JSON spec available at: http://localhost:5000/api-docs.json","timestamp":"2025-12-08T01:10:19.950Z"}
+{"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-08T01:10:19.952Z"}
+{"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-08T01:10:25.072Z"}
+{"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-08T01:10:25.085Z"}
+{"level":"info","message":"📚 Swagger Documentation available at: http://localhost:5000/api-docs","timestamp":"2025-12-08T01:10:43.135Z"}
+{"level":"info","message":"📄 Swagger JSON spec available at: http://localhost:5000/api-docs.json","timestamp":"2025-12-08T01:10:43.142Z"}
+{"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-08T01:10:43.144Z"}
+{"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-08T01:10:45.040Z"}
+{"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-08T01:10:45.046Z"}
+{"level":"info","message":"📚 Swagger Documentation available at: http://localhost:5000/api-docs","timestamp":"2025-12-08T01:15:38.491Z"}
+{"level":"info","message":"📄 Swagger JSON spec available at: http://localhost:5000/api-docs.json","timestamp":"2025-12-08T01:15:38.499Z"}
+{"level":"warn","message":"attempting to mongodb url , mongodb+srv://billydoumbouya5210_db_user:Easilandpay@cluster0.6jekjui.mongodb.net","timestamp":"2025-12-08T01:15:38.502Z"}
+{"level":"info","message":"✅connection to mongodb successfully","timestamp":"2025-12-08T01:15:42.749Z"}
+{"level":"info","message":"🌹 Server running on http://localhost:5000","timestamp":"2025-12-08T01:15:42.757Z"}
