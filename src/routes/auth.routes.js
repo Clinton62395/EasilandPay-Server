@@ -3,8 +3,15 @@ import {
   loginValidator,
   registerValidator,
 } from "../validations/auth.validators.js";
-import { deleteUser, getAllUsers, getUserById, hardDeleteUser, login, register, updateUser } from "../controllers/Auth.controller.js";
-
+import {
+  deleteUser,
+  getAllUsers,
+  getUserById,
+  hardDeleteUser,
+  login,
+  register,
+  updateUser,
+} from "../controllers/auth.controller.js";
 
 const router = express.Router();
 
