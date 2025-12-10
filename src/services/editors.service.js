@@ -1,10 +1,11 @@
 // services/editor.service.js
 import Editors from "../models/Editor.models.js";
 import { AppError } from "../utils/appError.utils.js";
+import { editorPopulate } from "../utils/helpers.utils.js";
 
 export const createEditor = async (data) => {
   const editor = await Editors.create(data);
-  await editor.populate("AuthorId", "firstName lastName email");
+  await editor.populate(editorPopulate);
   return editor;
 };
 
@@ -25,7 +26,7 @@ export const getAllEditors = async ({
 
   const skip = (page - 1) * limit;
   const editors = await Editors.find(filter)
-    .populate("AuthorId", "firstName lastName email")
+    .populate(editorPopulate)
     .limit(limit)
     .skip(skip)
     .sort({ createdAt: -1 });
@@ -36,10 +37,7 @@ export const getAllEditors = async ({
 };
 
 export const getEditorById = async (id) => {
-  const editor = await Editors.findById(id).populate(
-    "AuthorId",
-    "firstName lastName email"
-  );
+  const editor = await Editors.findById(id).populate(editorPopulate);
   if (!editor) throw new AppError("Editor content not found", 404);
   return editor;
 };
@@ -48,7 +46,7 @@ export const updateEditor = async (id, updates) => {
   const editor = await Editors.findByIdAndUpdate(id, updates, {
     new: true,
     runValidators: true,
-  }).populate("AuthorId", "firstName lastName email");
+  }).populate(editorPopulate);
   if (!editor) throw new AppError("Editor content not found", 404);
   return editor;
 };
@@ -62,7 +60,7 @@ export const deleteEditor = async (id) => {
 export const getEditorsByAuthor = async (authorId, page = 1, limit = 10) => {
   const skip = (page - 1) * limit;
   const editors = await Editors.find({ AuthorId: authorId })
-    .populate("AuthorId", "firstName lastName email")
+    .populate(editorPopulate)
     .limit(limit)
     .skip(skip)
     .sort({ createdAt: -1 });
@@ -78,7 +76,7 @@ export const searchEditors = async (query, page = 1, limit = 10) => {
       { content: { $regex: query, $options: "i" } },
     ],
   })
-    .populate("AuthorId", "firstName lastName email")
+    .populate(editorPopulate)
     .limit(limit)
     .skip(skip)
     .sort({ createdAt: -1 });
@@ -95,7 +93,7 @@ export const searchEditors = async (query, page = 1, limit = 10) => {
 
 export const getLatestEditors = async (limit = 10) => {
   const editors = await Editors.find()
-    .populate("AuthorId", "firstName lastName email")
+    .populate(editorPopulate)
     .limit(limit)
     .sort({ createdAt: -1 });
   return editors;

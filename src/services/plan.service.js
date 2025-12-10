@@ -1,5 +1,5 @@
 // services/plan.service.js
-import Plan from "../models/PaymentPlan.js";
+import Plan from "../models/Plan.models.js";
 import { AppError } from "../utils/appError.utils.js";
 
 // CREATE PLAN
@@ -30,7 +30,7 @@ export const getAllPlans = async (query) => {
     plans,
     total,
     page: parseInt(page),
-    pages: Math.ceil(total / limit),
+    pages: Math.ceil(total / parseInt(limit)),
   };
 };
 
@@ -65,7 +65,7 @@ export const deletePlan = async (id) => {
     );
   }
   await Plan.findByIdAndDelete(id);
-  return true;
+  return { message: "plan deleted successful", plan };
 };
 
 // DEACTIVATE PLAN

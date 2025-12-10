@@ -1,6 +1,4 @@
-// services/commissionService.js
-import Commission from "../models/Commission.js";
-import User from "../models/User.js";
+
 
 /**
  * Calcul du montant de commission en attente

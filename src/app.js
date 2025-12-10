@@ -12,7 +12,9 @@ import mongoSanitize from "express-mongo-sanitize";
 import authRoutes from "./routes/auth.routes.js";
 import authEditors from "./routes/editors.routes.js";
 import authPlan from "./routes/plan.routes.js";
-import authEscrow from "./routes/escrow.routes.js";
+import authWallet from "./routes/wallet.routes.js";
+import authTransaction from "./routes/transaction.routes.js";
+import webhookRoute from "./routes/webhook.routes.js";
 
 dotenv.config();
 
@@ -36,13 +38,26 @@ app.use(morgan("dev"));
 // ---------------------
 // YOUR API ROUTES
 // ---------------------
+// Routes for user management (registration, login, profile, etc.)
 app.use("/auth/users", authRoutes);
+
+// Routes for wallet management (check balance, credit, debit, etc.)
+app.use("/api/wallet", authWallet);
+
+// Routes for advanced authentication or editor operations (permissions, roles, etc.)
 app.use("/api/auth", authEditors);
+
+// Routes for financial plan management (CRUD plans, calculations, activation/deactivation)
 app.use("/api/plan", authPlan);
-app.use("/api/escrow", authEscrow);
-// app.use("/api/payments", paymentRoutes);
-// app.use("/api/auth", authRoutes);
-// (Tu ajouteras tes routes ici)
+
+// Routes for transaction management (credit, debit, commission, refund, history)
+app.use("/api/transaction", authTransaction);
+
+// Route to receive PSP webhooks (Flutterwave, Paystack, etc.)
+// These webhooks automatically update the wallet after payments or refunds
+app.use("/webhook", webhookRoute);
+
+// (You can add your other routes here)
 
 setupSwagger(app);
 // ---------------------

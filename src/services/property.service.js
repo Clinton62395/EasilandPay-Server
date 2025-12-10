@@ -1,6 +1,7 @@
 // services/property.service.js
 import Property from "../models/Property.js";
 import { AppError } from "../utils/appError.utils.js";
+import { propertyPopulate } from "../utils/helpers.utils.js";
 
 export const createProperty = async (data) => {
   const property = await Property.create(data);
@@ -52,11 +53,7 @@ export const getAllProperties = async (query) => {
 };
 
 export const getPropertyById = async (id) => {
-  const property = await Property.findById(id)
-    .populate("ownerId", "firstName lastName email companyInfo")
-    .populate("assignedRealtorId", "firstName lastName email phoneNumber")
-    .populate("reservedBy", "firstName lastName email")
-    .populate("approvedBy", "firstName lastName");
+  const property = await Property.findById(id).populate(propertyPopulate);
 
   if (!property) throw new AppError("Property not found", 404);
 
@@ -71,8 +68,8 @@ export const updateProperty = async (id, updates) => {
     new: true,
     runValidators: true,
   })
-    .populate("ownerId", "firstName lastName companyInfo")
-    .populate("assignedRealtorId", "firstName lastName");
+    .populate(propertyPopulate)
+    .populate(propertyPopulate);
   if (!property) throw new AppError("Property not found", 404);
   return property;
 };
@@ -96,7 +93,7 @@ export const reserveProperty = async (id, buyerId) => {
     throw new AppError("Property is not approved yet", 400);
 
   await property.reserve(buyerId);
-  await property.populate("reservedBy", "firstName lastName email");
+  await property.populate(propertyPopulate);
   return property;
 };
 
@@ -158,8 +155,7 @@ export const searchProperties = async ({ query, page = 1, limit = 10 }) => {
   };
 
   const properties = await Property.find(filter)
-    .populate("ownerId", "firstName lastName companyInfo")
-    .populate("assignedRealtorId", "firstName lastName")
+    .populate(propertyPopulate)
     .limit(parseInt(limit))
     .skip(skip)
     .sort({ createdAt: -1 });
@@ -175,8 +171,7 @@ export const getFeaturedProperties = async (limit = 10) => {
     isApproved: true,
     status: "available",
   })
-    .populate("ownerId", "firstName lastName companyInfo")
-    .populate("assignedRealtorId", "firstName lastName")
+    .populate(propertyPopulate)
     .limit(parseInt(limit))
     .sort({ createdAt: -1 });
 

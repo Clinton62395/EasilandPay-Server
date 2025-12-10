@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-
-
 const transactionSchema = new mongoose.Schema({
   // User concerné
   userId: {
@@ -18,8 +16,6 @@ const transactionSchema = new mongoose.Schema({
       values: [
         "CREDIT", // Funding wallet (card, bank transfer)
         "DEBIT", // Withdrawal ou payment
-        "ESCROW_LOCK", // Fonds locked dans escrow
-        "ESCROW_RELEASE", // Fonds released de escrow
         "COMMISSION", // Commission paid to realtor
         "REFUND", // Refund en cas d'annulation
       ],
@@ -69,41 +65,33 @@ const transactionSchema = new mongoose.Schema({
 
   // Metadata flexible (stocker infos spécifiques)
   metadata: {
-    // Pour payments
-    propertyId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Property",
-    },
-    escrowId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Escrow",
-    },
+    // propertyId peut rester si lié à la transaction
+    propertyId: { type: mongoose.Schema.Types.ObjectId, ref: "Property" },
+    planId: { type: mongoose.Schema.Types.ObjectId, ref: "Plan" },
 
-    // Pour payment gateway
-    paymentGateway: String, // 'paystack', 'flutterwave'
-    paymentMethod: String, // 'card', 'bank_transfer', 'ussd'
+    // payment gateway info
+    paymentGateway: String,
+    paymentMethod: String,
     gatewayReference: String,
 
-    // Pour withdrawals
+    // withdrawals
     bankDetails: {
       accountNumber: String,
       bankName: String,
       accountName: String,
     },
 
-    // Pour commissions
+    // commissions
     commissionPercentage: Number,
     originalTransactionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Transaction",
     },
 
-    // Timestamps détaillés
+    // timestamps et debug
     initiatedAt: Date,
     completedAt: Date,
     failedAt: Date,
-
-    // Pour debugging
     errorMessage: String,
     paystackResponse: mongoose.Schema.Types.Mixed,
   },
@@ -139,6 +127,5 @@ transactionSchema.statics.referenceExists = async function (reference) {
 };
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
-
 
 export default Transaction;
