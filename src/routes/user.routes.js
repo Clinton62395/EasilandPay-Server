@@ -25,7 +25,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /register:
+ * /auth/register:
  *   post:
  *     summary: Crée un nouvel utilisateur
  *     tags: [Auth]
@@ -57,7 +57,7 @@ const router = express.Router();
 router.post("/register", registerValidator, AuthController.register);
 /**
  * @swagger
- * /login:
+ * /auth/login:
  *   post:
  *     summary: Connexion d'un utilisateur
  *     tags: [Auth]

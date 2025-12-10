@@ -33,7 +33,7 @@ const swaggerOptions = {
       contact: {
         name: "API Support",
         email: "support@realestate.com",
-        url: "https://realestate.com/support",
+        url: "https://easilandpay-server.onrender.com",
       },
       license: {
         name: "MIT",
@@ -46,7 +46,9 @@ const swaggerOptions = {
         description: "Development server",
       },
       {
-        url: process.env.PRODUCTION_URL || "https://api.realestate.com",
+        url:
+          process.env.PRODUCTION_URL ||
+          "https://easilandpay-server.onrender.com",
         description: "Production server",
       },
     ],
@@ -135,15 +137,18 @@ const swaggerOptions = {
           },
         },
 
-        // User schemas
+        // User schemas (aligned with route request/response bodies)
         User: {
           type: "object",
-          required: ["email", "password", "role", "firstName", "lastName"],
+          required: ["email", "role"],
           properties: {
-            _id: {
+            _id: { type: "string", description: "User ID" },
+            name: {
               type: "string",
-              description: "User ID",
+              example: "John Doe",
+              description: "Full name (used in request bodies)",
             },
+            fullName: { type: "string", example: "bill doumbouya" },
             email: {
               type: "string",
               format: "email",
@@ -154,30 +159,18 @@ const swaggerOptions = {
               enum: ["buyer", "realtor", "company", "staff", "admin"],
               example: "buyer",
             },
-            firstName: {
-              type: "string",
-              example: "John",
-            },
-            lastName: {
-              type: "string",
-              example: "Doe",
-            },
-            phoneNumber: {
+            phone: {
               type: "string",
               example: "08012345678",
+              description: "Phone as used in request bodies",
             },
-            fullName: {
+            phoneNumber: { type: "string", example: "08012345678" },
+            avatar: {
               type: "string",
-              example: "John Doe",
+              description: "URL or base64 avatar string",
             },
-            isActive: {
-              type: "boolean",
-              default: true,
-            },
-            isVerified: {
-              type: "boolean",
-              default: false,
-            },
+            isActive: { type: "boolean", default: true },
+            isVerified: { type: "boolean", default: false },
             companyInfo: {
               type: "object",
               properties: {
@@ -196,14 +189,99 @@ const swaggerOptions = {
                 totalCommissionPaid: { type: "number" },
               },
             },
-            createdAt: {
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+
+        // Authentication request/response schemas (matching route bodies)
+        RegisterRequest: {
+          type: "object",
+          required: ["name", "email", "password"],
+          properties: {
+            name: { type: "string", example: "John Doe" },
+            email: {
               type: "string",
-              format: "date-time",
+              format: "email",
+              example: "user@example.com",
             },
-            updatedAt: {
+            password: { type: "string", example: "StrongP@ssw0rd" },
+            role: {
               type: "string",
-              format: "date-time",
+              enum: ["buyer", "realtor", "company"],
+              example: "buyer",
             },
+            phone: { type: "string", example: "08012345678" },
+          },
+        },
+
+        LoginRequest: {
+          type: "object",
+          required: ["email", "password"],
+          properties: {
+            email: {
+              type: "string",
+              format: "email",
+              example: "user@example.com",
+            },
+            password: { type: "string", example: "StrongP@ssw0rd" },
+          },
+        },
+
+        ForgotPasswordRequest: {
+          type: "object",
+          required: ["email"],
+          properties: {
+            email: {
+              type: "string",
+              format: "email",
+              example: "user@example.com",
+            },
+          },
+        },
+
+        ResetPasswordRequest: {
+          type: "object",
+          required: ["token", "newPassword", "confirmPassword"],
+          properties: {
+            token: {
+              type: "string",
+              description: "Reset token received by email",
+            },
+            newPassword: { type: "string" },
+            confirmPassword: { type: "string" },
+          },
+        },
+
+        ChangePasswordRequest: {
+          type: "object",
+          required: ["oldPassword", "newPassword", "confirmPassword"],
+          properties: {
+            oldPassword: { type: "string" },
+            newPassword: { type: "string" },
+            confirmPassword: { type: "string" },
+          },
+        },
+
+        UpdateProfileRequest: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            email: { type: "string", format: "email" },
+            phone: { type: "string" },
+            avatar: { type: "string", description: "URL or base64" },
+          },
+        },
+
+        RealtorBankDetailsRequest: {
+          type: "object",
+          required: ["bankName", "accountNumber", "accountHolder"],
+          properties: {
+            bankName: { type: "string" },
+            accountNumber: { type: "string" },
+            accountHolder: { type: "string" },
+            iban: { type: "string" },
+            bic: { type: "string" },
           },
         },
 

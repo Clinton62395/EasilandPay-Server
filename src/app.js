@@ -39,7 +39,7 @@ app.use(morgan("dev"));
 // YOUR API ROUTES
 // ---------------------
 // Routes for user management (registration, login, profile, etc.)
-app.use("/auth/users", authRoutes);
+app.use("/auth/", authRoutes);
 
 // Routes for wallet management (check balance, credit, debit, etc.)
 app.use("/api/wallet", authWallet);
