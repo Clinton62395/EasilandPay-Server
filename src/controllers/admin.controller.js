@@ -1,4 +1,4 @@
-import userService from "../services/auth.service.js";
+import userService from "../services/user.service.js";
 
 // ============================================
 // REGISTER

@@ -35,7 +35,8 @@ const planSchema = new mongoose.Schema(
         validator: function (value) {
           return value >= this.minAmount;
         },
-        message: "Maximum amount must be greater than or equal to minimum amount",
+        message:
+          "Maximum amount must be greater than or equal to minimum amount",
       },
     },
 
@@ -191,7 +192,11 @@ planSchema.virtual("totalInterest").get(function () {
 // PRE-SAVE HOOK: Validate amount range
 planSchema.pre("save", function (next) {
   if (this.maxAmount < this.minAmount) {
-    return next(new Error("Maximum amount must be greater than or equal to minimum amount"));
+    return next(
+      new Error(
+        "Maximum amount must be greater than or equal to minimum amount"
+      )
+    );
   }
   next();
 });
@@ -208,7 +213,7 @@ planSchema.pre("save", function (next) {
       quarterly: 90,
       yearly: 365,
     };
-    
+
     const days = frequencyDays[this.installmentFrequency] || 30;
     this.numberOfInstallments = Math.ceil(this.duration / days);
   }
@@ -228,11 +233,12 @@ planSchema.methods.calculateInstallmentAmount = function (totalAmountInKobo) {
 
   const downPayment = (totalAmountInKobo * this.downPaymentPercentage) / 100;
   const amountToFinance = totalAmountInKobo - downPayment;
-  
+
   // Simple interest calculation
-  const interest = (amountToFinance * this.interestRate * (this.duration / 365)) / 100;
+  const interest =
+    (amountToFinance * this.interestRate * (this.duration / 365)) / 100;
   const totalWithInterest = amountToFinance + interest;
-  
+
   return {
     downPaymentInKobo: Math.round(downPayment),
     downPayment: downPayment / 100,
@@ -242,7 +248,9 @@ planSchema.methods.calculateInstallmentAmount = function (totalAmountInKobo) {
     totalInterest: interest / 100,
     totalAmountInKobo: Math.round(totalWithInterest),
     totalAmount: totalWithInterest / 100,
-    installmentAmountInKobo: Math.round(totalWithInterest / this.numberOfInstallments),
+    installmentAmountInKobo: Math.round(
+      totalWithInterest / this.numberOfInstallments
+    ),
     installmentAmount: totalWithInterest / this.numberOfInstallments / 100,
     numberOfInstallments: this.numberOfInstallments,
   };
