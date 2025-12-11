@@ -6,6 +6,15 @@ import {
   loginValidator,
   registerValidator,
   userIdParamValidation,
+  refreshTokenValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
+  changePasswordValidation,
+  updateProfileValidation,
+  updateBankDetailsValidation,
+  roleParamValidation,
+  tokenParamValidation,
+  getUsersQueryValidation,
 } from "../validations/auth.validators.js";
 import validate from "../validations/validatorResult.js";
 
@@ -123,7 +132,13 @@ router.post(
  */
 
 // Refresh Token
-router.post("/refresh-token", authenticate, AuthController.refreshToken);
+router.post(
+  "/refresh-token",
+  authenticate,
+  refreshTokenValidation,
+  validate,
+  AuthController.refreshToken
+);
 
 /**
  * @swagger
@@ -155,7 +170,12 @@ router.post("/refresh-token", authenticate, AuthController.refreshToken);
  */
 
 // Forgot Password
-router.post("/forgot-password", AuthController.forgotPassword);
+router.post(
+  "/forgot-password",
+  forgotPasswordValidation,
+  validate,
+  AuthController.forgotPassword
+);
 
 /**
  * @swagger
@@ -194,7 +214,12 @@ router.post("/forgot-password", AuthController.forgotPassword);
  */
 
 // Reset Password
-router.post("/reset-password", AuthController.resetPassword);
+router.post(
+  "/reset-password",
+  resetPasswordValidation,
+  validate,
+  AuthController.resetPassword
+);
 /**
  * @swagger
  * /verify-email/{token}:
@@ -219,7 +244,12 @@ router.post("/reset-password", AuthController.resetPassword);
  */
 
 // Verify Email
-router.get("/verify-email/:token", AuthController.verifyEmail);
+router.get(
+  "/verify-email/:token",
+  tokenParamValidation,
+  validate,
+  AuthController.verifyEmail
+);
 
 // ============================================
 // PROTECTED ROUTES
@@ -311,7 +341,13 @@ router.get("/me", authenticate, AuthController.getCurrentUser);
  */
 
 // Update Profile
-router.put("/profile", authenticate, AuthController.updateProfile);
+router.put(
+  "/profile",
+  authenticate,
+  updateProfileValidation,
+  validate,
+  AuthController.updateProfile
+);
 
 /**
  * @swagger
@@ -351,7 +387,13 @@ router.put("/profile", authenticate, AuthController.updateProfile);
  */
 
 // Change Password
-router.post("/change-password", authenticate, AuthController.changePassword);
+router.post(
+  "/change-password",
+  authenticate,
+  changePasswordValidation,
+  validate,
+  AuthController.changePassword
+);
 
 /**
  * @swagger
@@ -442,6 +484,9 @@ router.put(
   "/realtor/:id/bank-details",
   authenticate,
   authorize("realtor", "admin"),
+  userIdParamValidation,
+  updateBankDetailsValidation,
+  validate,
   AuthController.updateRealtorBankDetails
 );
 
@@ -513,6 +558,8 @@ router.get(
   "/users",
   authenticate,
   authorize("admin", "staff"),
+  getUsersQueryValidation,
+  validate,
   AuthController.getAllUsers
 );
 
@@ -560,6 +607,9 @@ router.get(
   "/users/role/:role",
   authenticate,
   authorize("admin", "staff"),
+  roleParamValidation,
+  getUsersQueryValidation,
+  validate,
   AuthController.getUsersByRole
 );
 
@@ -614,6 +664,8 @@ router.get(
   "/users/:id",
   authenticate,
   authorize("admin", "staff"),
+  userIdParamValidation,
+  validate,
   AuthController.getUserById
 );
 
@@ -703,6 +755,8 @@ router.patch(
   "/users/:id/suspend",
   authenticate,
   authorize("admin"),
+  userIdParamValidation,
+  validate,
   AuthController.suspendUser
 );
 
@@ -735,9 +789,10 @@ router.patch(
 // Activate User
 router.patch(
   "/users/:id/activate",
-  userIdParamValidation,
   authenticate,
   authorize("admin"),
+  userIdParamValidation,
+  validate,
   AuthController.activateUser
 );
 
@@ -769,11 +824,11 @@ router.patch(
 
 // Delete User
 router.delete(
-  "/:id",
-  userIdParamValidation,
-  validate,
+  "/users/:id",
   authenticate,
   authorize("admin"),
+  userIdParamValidation,
+  validate,
   AuthController.deleteUser
 );
 
