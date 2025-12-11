@@ -12,14 +12,14 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
     },
-    
+
     password: {
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
       select: false, // Don't return password by default
     },
-    
+
     // User role
     role: {
       type: String,
@@ -29,26 +29,26 @@ const userSchema = new mongoose.Schema(
       },
       required: true,
     },
-    
+
     // Personal information
     firstName: {
       type: String,
       required: [true, "First name is required"],
       trim: true,
     },
-    
+
     lastName: {
       type: String,
       required: [true, "Last name is required"],
       trim: true,
     },
-    
+
     phoneNumber: {
       type: String,
       trim: true,
       match: [/^[0-9]{10,15}$/, "Please provide a valid phone number"],
     },
-    
+
     // Company info (for company role)
     companyInfo: {
       name: String,
@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema(
       address: String,
       employeeCount: Number,
     },
-    
+
     // Realtor info
     realtorInfo: {
       licenseNumber: String,
@@ -70,47 +70,47 @@ const userSchema = new mongoose.Schema(
       totalCommissionEarned: { type: Number, default: 0 },
       totalCommissionPaid: { type: Number, default: 0 },
     },
-    
+
     // Account status
     isActive: {
       type: Boolean,
       default: true,
     },
-    
+
     isVerified: {
       type: Boolean,
       default: false,
     },
-    
+
     // ============================================
     // JWT & AUTH FIELDS (NEW)
     // ============================================
-    
+
     refreshToken: {
       type: String,
       select: false, // Don't return in queries
     },
-    
+
     passwordResetToken: {
       type: String,
       select: false,
     },
-    
+
     passwordResetExpires: {
       type: Date,
       select: false,
     },
-    
+
     emailVerificationToken: {
       type: String,
       select: false,
     },
-    
+
     emailVerificationExpires: {
       type: Date,
       select: false,
     },
-    
+
     // Metadata
     lastLogin: Date,
   },
@@ -132,23 +132,11 @@ userSchema.virtual("fullName").get(function () {
 });
 
 // PRE-SAVE HOOK: Hash password
-userSchema.pre("save", async function (next) {
-  // Only hash if password is modified
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// PRE-SAVE HOOK: Update timestamp
-userSchema.pre("save", function (next) {
-  this.updatedAt = new Date();
-  next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // METHOD: Compare password

@@ -5,7 +5,9 @@ import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import {
   loginValidator,
   registerValidator,
+  userIdParamValidation,
 } from "../validations/auth.validators.js";
+import validate from "../validations/validatorResult.js";
 
 const router = express.Router();
 
@@ -36,25 +38,34 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - name
+ *               - fullName
  *               - email
  *               - password
+ *               - role
+ *               - phoneNumber
  *             properties:
- *               name:
+ *               fullName:
  *                 type: string
+ *                 example: "Billy Doumbouya"
  *               email:
  *                 type: string
+ *                 example: "billy@example.com"
  *               password:
  *                 type: string
+ *                 example: "Password123!"
+ *               role:
+ *                 type: string
+ *                 example: "buyer"
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "0705674557"
  *     responses:
  *       201:
- *         description: Utilisateur créé avec succès
- *       400:
- *         description: Données invalides
+ *         description: Utilisateur créé
  */
 
 // Register
-router.post("/register", registerValidator, AuthController.register);
+router.post("/register", registerValidator, validate, AuthController.register);
 /**
  * @swagger
  * /auth/login:
@@ -73,8 +84,10 @@ router.post("/register", registerValidator, AuthController.register);
  *             properties:
  *               email:
  *                 type: string
+ *                 example: "admin@gmail.com"
  *               password:
  *                 type: string
+ *                 example: "password1234"
  *     responses:
  *       200:
  *         description: Connexion réussie, token renvoyé
@@ -83,7 +96,16 @@ router.post("/register", registerValidator, AuthController.register);
  */
 
 // Login
-router.post("/login", loginValidator, AuthController.login);
+router.post(
+  "/login",
+  (req, res, next) => {
+    console.log("Route /login hit");
+    next();
+  },
+  loginValidator,
+  validate,
+  AuthController.login
+);
 
 /**
  * @swagger
@@ -713,6 +735,7 @@ router.patch(
 // Activate User
 router.patch(
   "/users/:id/activate",
+  userIdParamValidation,
   authenticate,
   authorize("admin"),
   AuthController.activateUser
@@ -720,7 +743,7 @@ router.patch(
 
 /**
  * @swagger
- * /users/{id}:
+ * /auth/{id}:
  *   delete:
  *     summary: Supprime un utilisateur (suppression logique ou physique)
  *     tags: [Admin]
@@ -729,9 +752,9 @@ router.patch(
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
  *         description: ID de l'utilisateur à supprimer
  *     responses:
  *       200:
@@ -746,7 +769,9 @@ router.patch(
 
 // Delete User
 router.delete(
-  "/users/:id",
+  "/:id",
+  userIdParamValidation,
+  validate,
   authenticate,
   authorize("admin"),
   AuthController.deleteUser

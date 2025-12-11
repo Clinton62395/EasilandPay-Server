@@ -7,7 +7,6 @@ import errorHandler from "./middlewares/errorHandleler.js";
 import connectDB from "./configs/database.configs.js";
 import compression from "compression";
 import { logger } from "./utils/logger.js";
-import setupSwagger from "./utils/swagger.js";
 import mongoSanitize from "express-mongo-sanitize";
 import authEditors from "./routes/editors.routes.js";
 import authPlan from "./routes/plan.routes.js";
@@ -15,6 +14,7 @@ import authWallet from "./routes/wallet.routes.js";
 import webhookRoute from "./routes/webhook.routes.js";
 import authTransaction from "./routes/transaction.routes.js";
 import authRoutes from "./routes/user.routes.js";
+import Swagger from "./docs/swagger.js";
 
 dotenv.config();
 
@@ -59,7 +59,7 @@ app.use("/webhook", webhookRoute);
 
 // (You can add your other routes here)
 
-setupSwagger(app);
+Swagger(app)
 // ---------------------
 // ---------------------
 // DEFAULT ROUTE

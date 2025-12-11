@@ -108,7 +108,6 @@ const transactionSchema = new mongoose.Schema({
 transactionSchema.index({ userId: 1, createdAt: -1 });
 transactionSchema.index({ userId: 1, type: 1 });
 transactionSchema.index({ userId: 1, status: 1 });
-transactionSchema.index({ reference: 1 });
 
 // VIRTUAL: Montant en Naira
 transactionSchema.virtual("amount").get(function () {

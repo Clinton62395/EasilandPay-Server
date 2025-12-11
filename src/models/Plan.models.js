@@ -158,7 +158,6 @@ const planSchema = new mongoose.Schema(
 );
 
 // INDEXES
-planSchema.index({ name: 1 });
 planSchema.index({ planType: 1, isActive: 1 });
 planSchema.index({ minAmount: 1, maxAmount: 1 });
 

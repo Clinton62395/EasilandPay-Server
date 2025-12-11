@@ -2,12 +2,12 @@ import { body, param, query } from "express-validator";
 
 // Register validation
 export const registerValidator = [
-  body("firstName").notEmpty().withMessage("First name required"),
-  body("lastName").notEmpty().withMessage("Last name required"),
+  // registerValidator
+  body("fullName").notEmpty().withMessage("Full name required"),
   body("email").isEmail().withMessage("Invalid email"),
   body("password").isLength({ min: 6 }).withMessage("Password too short"),
   body("role")
-    .isIn(["buyer", "realtor", "company", "staff", "admin"])
+    .isIn(["buyer", "realtor", "company", "staff", ])
     .withMessage("Invalid role"),
 ];
 
