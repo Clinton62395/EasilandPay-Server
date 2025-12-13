@@ -134,7 +134,7 @@ const swaggerOptions = {
               type: "integer",
               description: "Total number of pages",
             },
-            
+
             data: {
               type: "array",
               items: {
@@ -642,7 +642,7 @@ const swaggerOptions = {
     // Tags for grouping endpoints
     tags: [
       {
-        name: "Users",
+        name: "Auth",
         description: "User management endpoints",
       },
       {
@@ -654,6 +654,10 @@ const swaggerOptions = {
         description: "Realtor commission management",
       },
       {
+        name: "Realtors",
+        description: "Realtor  management endpoint",
+      },
+      {
         name: "Plans",
         description: "Payment plan management",
       },
@@ -662,7 +666,7 @@ const swaggerOptions = {
         description: "Content management",
       },
       {
-        name: "Authentication",
+        name: "Admin",
         description: "Authentication endpoints",
       },
     ],

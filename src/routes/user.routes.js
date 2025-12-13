@@ -11,7 +11,6 @@ import {
   resetPasswordValidation,
   changePasswordValidation,
   updateProfileValidation,
-  updateBankDetailsValidation,
   roleParamValidation,
   tokenParamValidation,
   getUsersQueryValidation,
@@ -118,7 +117,7 @@ router.post(
 
 /**
  * @swagger
- * /refresh-token:
+ * /auth/refresh-token:
  *   post:
  *     summary: Rafraîchit le token d'un utilisateur connecté
  *     tags: [Auth]
@@ -142,7 +141,7 @@ router.post(
 
 /**
  * @swagger
- * /forgot-password:
+ * /auth/forgot-password:
  *   post:
  *     summary: Demande de réinitialisation de mot de passe
  *     tags: [Auth]
@@ -257,7 +256,7 @@ router.get(
 
 /**
  * @swagger
- * /logout:
+ * /auth/logout:
  *   post:
  *     summary: Déconnecte l'utilisateur
  *     tags: [Auth]
@@ -272,40 +271,87 @@ router.post("/logout", authenticate, AuthController.logout);
 
 /**
  * @swagger
- * /me:
+ * /auth/{id}:
  *   get:
- *     summary: Récupère les informations de l'utilisateur connecté
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
+ *     summary: Get user by ID
+ *     description: Retrieve a user by their MongoDB ObjectId.
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: MongoDB User ID
+ *         schema:
+ *           type: string
+ *           example: 675a7fe9e8d129c13b102488
  *     responses:
  *       200:
- *         description: Informations utilisateur récupérées
+ *         description: User found successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
+ *                 status:
  *                   type: string
- *                 name:
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 675a7fe9e8d129c13b102488
+ *                     name:
+ *                       type: string
+ *                       example: Billy Doumbouya
+ *                     email:
+ *                       type: string
+ *                       example: billy@example.com
+ *                     role:
+ *                       type: string
+ *                       example: user
+ *
+ *       400:
+ *         description: Invalid user ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
  *                   type: string
- *                 email:
+ *                   example: error
+ *                 message:
  *                   type: string
- *                 role:
+ *                   example: Invalid user ID
+ *
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
  *                   type: string
- *                 isVerified:
- *                   type: boolean
- *       401:
- *         description: Non authentifié
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  */
 
 // Get Current User
-router.get("/me", authenticate, AuthController.getCurrentUser);
+router.get(
+  "/:id",
+  authenticate,
+  authorize("admin"),
+  AuthController.getCurrentUser
+);
 
 /**
  * @swagger
- * /profile:
+ * /auth/profile:
  *   put:
  *     summary: Met à jour le profil de l'utilisateur connecté
  *     tags: [Auth]
@@ -351,7 +397,7 @@ router.put(
 
 /**
  * @swagger
- * /change-password:
+ * /auth/change-password:
  *   post:
  *     summary: Change le mot de passe de l'utilisateur connecté
  *     tags: [Auth]
@@ -397,7 +443,7 @@ router.post(
 
 /**
  * @swagger
- * /send-verification-email:
+ * /auth/send-verification-email:
  *   post:
  *     summary: Renvoie un email de vérification
  *     tags: [Auth]
@@ -422,81 +468,12 @@ router.post(
 );
 
 // ============================================
-// REALTOR ROUTES
-// ============================================
-
-/**
- * @swagger
- * /realtor/{id}/bank-details:
- *   put:
- *     summary: Met à jour les coordonnées bancaires d'un Realtor
- *     tags: [Realtor]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: ID du Realtor
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - bankName
- *               - accountNumber
- *               - accountHolder
- *             properties:
- *               bankName:
- *                 type: string
- *                 description: Nom de la banque
- *               accountNumber:
- *                 type: string
- *                 description: Numéro de compte bancaire
- *               accountHolder:
- *                 type: string
- *                 description: Titulaire du compte
- *               iban:
- *                 type: string
- *                 description: IBAN (optionnel)
- *               bic:
- *                 type: string
- *                 description: BIC/SWIFT (optionnel)
- *     responses:
- *       200:
- *         description: Coordonnées bancaires mises à jour avec succès
- *       400:
- *         description: Données invalides
- *       401:
- *         description: Non authentifié
- *       403:
- *         description: Accès refusé (seul le Realtor ou un Admin peut mettre à jour)
- *       404:
- *         description: Realtor non trouvé
- */
-
-// Update Bank Details
-router.put(
-  "/realtor/:id/bank-details",
-  authenticate,
-  authorize("realtor", "admin"),
-  userIdParamValidation,
-  updateBankDetailsValidation,
-  validate,
-  AuthController.updateRealtorBankDetails
-);
-
-// ============================================
 // ADMIN & STAFF ROUTES
 // ============================================
 
 /**
  * @swagger
- * /users:
+ * /auth/users/:
  *   get:
  *     summary: Récupère la liste de tous les utilisateurs
  *     tags: [Admin]
@@ -557,7 +534,7 @@ router.put(
 router.get(
   "/users",
   authenticate,
-  authorize("admin", "staff"),
+  authorize("admin"),
   getUsersQueryValidation,
   validate,
   AuthController.getAllUsers
@@ -565,7 +542,7 @@ router.get(
 
 /**
  * @swagger
- * /users/role/{role}:
+ * /auth/role/{role}:
  *   get:
  *     summary: Récupère les utilisateurs par rôle
  *     tags: [Admin]
@@ -604,18 +581,17 @@ router.get(
 
 // Get Users By Role
 router.get(
-  "/users/role/:role",
+  "/role/:role",
   authenticate,
-  authorize("admin", "staff"),
+  authorize("admin"),
   roleParamValidation,
   getUsersQueryValidation,
   validate,
   AuthController.getUsersByRole
 );
-
 /**
  * @swagger
- * /users/{id}:
+ * /auth/{id}:
  *   get:
  *     summary: Récupère les détails d'un utilisateur par ID
  *     tags: [Admin]
@@ -631,47 +607,20 @@ router.get(
  *     responses:
  *       200:
  *         description: Détails de l'utilisateur récupérés avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 name:
- *                   type: string
- *                 email:
- *                   type: string
- *                 role:
- *                   type: string
- *                 status:
- *                   type: string
- *                 isVerified:
- *                   type: boolean
- *                 createdAt:
- *                   type: string
- *                   format: date-time
- *       401:
- *         description: Non authentifié
- *       403:
- *         description: Accès refusé
- *       404:
- *         description: Utilisateur non trouvé
  */
-
-// Get User By ID
 router.get(
-  "/users/:id",
+  "/:id",
   authenticate,
-  authorize("admin", "staff"),
+  authorize("admin"),
   userIdParamValidation,
   validate,
   AuthController.getUserById
 );
 
+
 /**
  * @swagger
- * /statistics:
+ * /auth/statistics:
  *   get:
  *     summary: Récupère les statistiques des utilisateurs
  *     tags: [Admin]
@@ -717,7 +666,7 @@ router.get(
 
 /**
  * @swagger
- * /users/{id}/suspend:
+ * /auth/{id}/suspend:
  *   patch:
  *     summary: Suspend un utilisateur
  *     tags: [Admin]
@@ -752,7 +701,7 @@ router.get(
 
 // Suspend User
 router.patch(
-  "/users/:id/suspend",
+  "/:id/suspend",
   authenticate,
   authorize("admin"),
   userIdParamValidation,
@@ -762,7 +711,7 @@ router.patch(
 
 /**
  * @swagger
- * /users/{id}/activate:
+ * /auth/{id}/activate:
  *   patch:
  *     summary: Active un utilisateur suspendu
  *     tags: [Admin]
@@ -788,7 +737,7 @@ router.patch(
 
 // Activate User
 router.patch(
-  "/users/:id/activate",
+  "/:id/activate",
   authenticate,
   authorize("admin"),
   userIdParamValidation,
@@ -824,7 +773,7 @@ router.patch(
 
 // Delete User
 router.delete(
-  "/users/:id",
+  "/:id",
   authenticate,
   authorize("admin"),
   userIdParamValidation,

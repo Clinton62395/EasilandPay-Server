@@ -2,13 +2,32 @@ import { body, param, query } from "express-validator";
 
 // Register validation
 export const registerValidator = [
-  // registerValidator
+  // Full name
   body("fullName").notEmpty().withMessage("Full name required"),
+
+  // Email
   body("email").isEmail().withMessage("Invalid email"),
+
+  // Password
   body("password").isLength({ min: 6 }).withMessage("Password too short"),
+
+  // Confirm Password
+  body("confirmPassword").custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error("Passwords do not match");
+    }
+    return true;
+  }),
+
+  // Role
   body("role")
-    .isIn(["buyer", "realtor", "company", "staff", ])
+    .isIn(["buyer", "realtor", "company"])
     .withMessage("Invalid role"),
+
+  // Terms & Conditions
+  body("termsCondition")
+    .equals("true")
+    .withMessage("You must accept terms and conditions"),
 ];
 
 // Login validation

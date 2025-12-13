@@ -15,6 +15,7 @@ import webhookRoute from "./routes/webhook.routes.js";
 import authTransaction from "./routes/transaction.routes.js";
 import authRoutes from "./routes/user.routes.js";
 import Swagger from "./docs/swagger.js";
+import authRealtors from "./routes/realtors.routes.js";
 
 dotenv.config();
 
@@ -42,7 +43,10 @@ app.use(morgan("dev"));
 app.use("/auth/", authRoutes);
 
 // Routes for wallet management (check balance, credit, debit, etc.)
-app.use("/api/wallet", authWallet);
+app.use("/wallet", authWallet);
+
+// Routes for relator management (check balance, credit, debit, etc.)
+app.use("/realtor", authRealtors);
 
 // Routes for advanced authentication or editor operations (permissions, roles, etc.)
 app.use("/api/auth", authEditors);
@@ -59,7 +63,7 @@ app.use("/webhook", webhookRoute);
 
 // (You can add your other routes here)
 
-Swagger(app)
+Swagger(app);
 // ---------------------
 // ---------------------
 // DEFAULT ROUTE

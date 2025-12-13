@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: {
-        values: ["buyer", "realtor", "company", "staff", "admin"],
+        values: ["buyer", "realtor", "company", "admin"],
         message: "{VALUE} is not a valid role",
       },
       required: true,
@@ -110,6 +110,7 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    termsCondition: { type: Boolean, default: false },
 
     // Metadata
     lastLogin: Date,

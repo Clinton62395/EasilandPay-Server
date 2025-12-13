@@ -53,6 +53,7 @@ class UserService {
       const {
         email,
         password,
+        confirmPassword,
         role,
         fullName,
         phoneNumber,
@@ -100,7 +101,7 @@ class UserService {
       }
 
       // 5. Generate tokens
-      const accessToken = this.generateAccessToken(newUser._id, newUser.role);
+      const token = this.generateAccessToken(newUser._id, newUser.role);
       const refreshToken = this.generateRefreshToken(newUser._id);
 
       // 6. Save refresh token to user (AVANT le commit)
@@ -117,8 +118,9 @@ class UserService {
 
       return {
         user: userObject,
-        accessToken,
+        token,
         refreshToken,
+        role: userObject.role,
       };
     } catch (error) {
       await session.abortTransaction();
@@ -154,7 +156,7 @@ class UserService {
       throw new AppError("Invalid credentials", 401);
     }
 
-    const accessToken = this.generateAccessToken(user._id, user.role);
+    const token = this.generateAccessToken(user._id, user.role);
     const refreshToken = this.generateRefreshToken(user._id);
 
     user.refreshToken = refreshToken;
@@ -167,7 +169,8 @@ class UserService {
 
     return {
       user: userObject,
-      accessToken,
+      token,
+      role: userObject.role,
       refreshToken,
     };
   };

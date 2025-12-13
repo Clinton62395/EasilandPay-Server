@@ -1,7 +1,9 @@
 import userService from "../services/user.service.js";
 import { AppError } from "../utils/appError.utils.js";
 import { catchAsynch } from "../utils/catchAsynch.utils.js";
+import dotenv from "dotenv";
 
+dotenv.config();
 class AuthController {
   // ============================================
   // REGISTER
@@ -23,7 +25,6 @@ class AuthController {
     const { email, password } = req.body;
     console.log("Email:", email, "Password:", password);
 
-    
     const result = await userService.login(email, password);
 
     res.status(200).json({
