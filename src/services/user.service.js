@@ -57,6 +57,7 @@ class UserService {
         role,
         fullName,
         phoneNumber,
+        termsCondition,
         companyInfo,
         realtorInfo,
       } = userData;
@@ -82,6 +83,7 @@ class UserService {
         password,
         role,
         firstName,
+        termsCondition,
         lastName,
         phoneNumber,
         companyInfo: role === "company" ? companyInfo : undefined,
@@ -117,7 +119,7 @@ class UserService {
       delete userObject.refreshToken;
 
       return {
-        user: userObject,
+        data: userObject,
         token,
         refreshToken,
         role: userObject.role,
@@ -168,7 +170,7 @@ class UserService {
     delete userObject.refreshToken;
 
     return {
-      user: userObject,
+      data: userObject,
       token,
       role: userObject.role,
       refreshToken,

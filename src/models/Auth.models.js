@@ -61,14 +61,9 @@ const userSchema = new mongoose.Schema(
     realtorInfo: {
       licenseNumber: String,
       paystackSubaccountCode: String,
-      bankDetails: {
-        accountNumber: String,
-        bankCode: String,
-        bankName: String,
-        accountName: String,
-      },
-      totalCommissionEarned: { type: Number, default: 0 },
-      totalCommissionPaid: { type: Number, default: 0 },
+      bio: String,
+      profileImage: String,
+      rating: { type: Number, default: 0 },
     },
 
     // Account status

@@ -617,7 +617,6 @@ router.get(
   AuthController.getUserById
 );
 
-
 /**
  * @swagger
  * /auth/statistics:
