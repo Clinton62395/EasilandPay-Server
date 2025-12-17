@@ -1,106 +1,106 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
-const userSchema = new mongoose.Schema(
-  {
-    // Basic information
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-      unique: true,
-      lowercase: true,
-      trim: true,
-      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
-    },
+const userSchema = new mongoose.Schema({
+  // Basic information
+  email: {
+    type: String,
+    required: [true, "Email is required"],
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
+  },
 
-    password: {
-      type: String,
-      required: function () {
-        return this.provider === "local";
-      },
-      select: false,
+  password: {
+    type: String,
+    required: function () {
+      return this.provider === "local";
     },
-    provider: {
-      type: String,
-      enum: ["local", "google"],
-      default: "local",
-    },
+    select: false,
+  },
+  provider: {
+    type: String,
+    enum: ["local", "google"],
+    default: "local",
+  },
 
-    // User role
-    role: {
-      type: String,
-      enum: {
-        values: ["buyer", "realtor", "company", "admin"],
-        message: "{VALUE} is not a valid role",
-      },
-      required: true,
+  // User role
+  role: {
+    type: String,
+    enum: {
+      values: ["buyer", "realtor", "company", "admin"],
+      message: "{VALUE} is not a valid role",
     },
+    required: true,
+  },
 
-    // Personal information
-    firstName: {
-      type: String,
-      required: [true, "First name is required"],
-      trim: true,
-    },
+  // Personal information
+  firstName: {
+    type: String,
+    required: [true, "First name is required"],
+    trim: true,
+  },
 
-    lastName: {
-      type: String,
-      required: [true, "Last name is required"],
-      trim: true,
-    },
+  lastName: {
+    type: String,
+    required: [true, "Last name is required"],
+    trim: true,
+  },
 
-    phoneNumber: {
-      type: String,
-      trim: true,
-      match: [/^[0-9]{10,15}$/, "Please provide a valid phone number"],
-    },
+  phoneNumber: {
+    type: String,
+    trim: true,
+    match: [/^[0-9]{10,15}$/, "Please provide a valid phone number"],
+  },
 
-    // Company info (for company role)
-    companyInfo: {
-      name: String,
-      registrationNumber: String,
-      address: String,
-      employeeCount: Number,
-    },
+  // Company info (for company role)
+  companyInfo: {
+    name: String,
+    registrationNumber: String,
+    address: String,
+    employeeCount: Number,
+  },
 
-    // Realtor info
-    realtorInfo: {
-      licenseNumber: String,
-      paystackSubaccountCode: String,
-      bio: String,
-      profileImage: String,
-      rating: { type: Number, default: 0 },
-    },
+  // Realtor info
+  realtorInfo: {
+    licenseNumber: String,
+    paystackSubaccountCode: String,
+    bio: String,
+    profileImage: String,
+    rating: { type: Number, default: 0 },
+  },
 
-    // Account status
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+  // Account status
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
 
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
 
-    // ============================================
-    // JWT & AUTH FIELDS (NEW)
-    // ============================================
+  // ============================================
+  // JWT & AUTH FIELDS (NEW)
+  // ============================================
 
-    refreshToken: {
-      type: String,
-      select: false, // Don't return in queries
-    },
+  refreshToken: {
+    type: String,
+    select: false, // Don't return in queries
+  },
 
-    verificationCode: {
-      type: String,
-      select: false,
-    },
-    verificationCodeExpires: {
-      type: Date,
-      select: false,
-    },
+  verificationCode: {
+    type: String,
+    select: false,
+  },
+  verificationCodeExpires: {
+    type: Date,
+    select: false,
+  },
 
+  resetPasswordExpires: {
     resetPasswordExpires: {
       type: Date,
       select: false,
@@ -125,12 +125,11 @@ const userSchema = new mongoose.Schema(
     // Metadata
     lastLogin: Date,
   },
-  {
-    timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  }
-);
+
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+});
 
 // INDEXES
 userSchema.index({ email: 1 });
@@ -161,9 +160,11 @@ userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
   delete user.refreshToken;
-  delete user.passwordResetToken;
-  delete user.passwordResetExpires;
-  delete user.emailVerificationToken;
+  delete user.resetPasswordToken;
+  delete user.resetPasswordExpires;
+  delete user.verificationCode;
+  delete user.verificationCode;
+  delete user.verificationCodeExpires;
   delete user.emailVerificationExpires;
   delete user.__v;
   return user;

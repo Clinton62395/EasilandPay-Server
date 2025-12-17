@@ -224,7 +224,7 @@ router.post(
   "/reset-password",
   resetPasswordValidator,
   validate,
-  AuthController.resetPassword
+  AuthController.resetPasswordController
 );
 /**
  * @swagger

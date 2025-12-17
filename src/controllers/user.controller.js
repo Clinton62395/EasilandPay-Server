@@ -20,8 +20,6 @@ class AuthController {
     });
   });
 
- 
-
   // ============================================
   // LOGIN
   // ============================================
@@ -99,7 +97,7 @@ class AuthController {
   //OTP VERIFICATION
   // ============================================
 
-  verifyOtpController = async (req, res, next) => {
+  verifyOtpController = catchAsynch(async (req, res, next) => {
     try {
       const { email, code } = req.body;
 
@@ -110,11 +108,11 @@ class AuthController {
     } catch (error) {
       next(error); // passe à ton errorHandler global
     }
-  };
+  });
   // ============================================
   // RESET PASSWORD
   // ============================================
-  resetPassword = catchAsynch(async (req, res, next) => {
+  resetPasswordController = catchAsynch(async (req, res, next) => {
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
