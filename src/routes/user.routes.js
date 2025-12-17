@@ -75,11 +75,6 @@ const router = express.Router();
 
 // Register
 router.post("/register", registerValidator, validate, AuthController.register);
-router.post(
-  "/google-register",
-  verifyFirebaseToken,
-  AuthController.googleRegister
-);
 /**
  * @swagger
  * /auth/login:

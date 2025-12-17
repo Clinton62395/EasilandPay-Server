@@ -20,39 +20,8 @@ class AuthController {
     });
   });
 
-  // ============================================
-  // google register controller
-  // ============================================
+ 
 
-  googleRegister = catchAsynch(async (req, res) => {
-    const { idToken, fullName, role, phoneNumber } = req.body;
-
-    if (!idToken) {
-      throw new AppError("Google token is required", 400);
-    }
-
-    // 1. Verify Firebase token
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-
-    const email = decodedToken.email;
-
-    // 2. Call SAME register service
-    const result = await userService.register({
-      email,
-      fullName,
-      role,
-      phoneNumber,
-      provider: "google",
-      isVerified: true,
-      termsCondition: true,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "Google signup successful",
-      data: result,
-    });
-  });
   // ============================================
   // LOGIN
   // ============================================

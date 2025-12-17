@@ -16,6 +16,8 @@ import authTransaction from "./routes/transaction.routes.js";
 import authRoutes from "./routes/user.routes.js";
 import Swagger from "./docs/swagger.js";
 import authRealtors from "./routes/realtors.routes.js";
+import authGoogle from "./routes/googleRegister.routes.js";
+import NewLetter from "./routes/newsLetter.routes.js";
 
 dotenv.config();
 
@@ -56,6 +58,11 @@ app.use("/api/plan", authPlan);
 
 // Routes for transaction management (credit, debit, commission, refund, history)
 app.use("/api/transaction", authTransaction);
+
+// Routes for google registering management
+app.use("/api/", authGoogle);
+// Routes for newsLetter  management
+app.use("/newsletter/", NewLetter);
 
 // Route to receive PSP webhooks (Flutterwave, Paystack, etc.)
 // These webhooks automatically update the wallet after payments or refunds

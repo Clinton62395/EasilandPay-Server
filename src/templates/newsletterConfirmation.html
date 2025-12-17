@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Newsletter Subscription Confirmation</title>
+    <style>
+      /* Inline styles for email compatibility */
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, sans-serif;
+      }
+
+      /* Mobile responsive */
+      @media only screen and (max-width: 600px) {
+        .mobile-padding {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+        }
+        .mobile-stack {
+          display: block !important;
+          width: 100% !important;
+        }
+      }
+    </style>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f8fafc">
+    <!-- Hidden pre-header text -->
+    <div
+      style="
+        display: none;
+        font-size: 0;
+        line-height: 0;
+        max-height: 0;
+        max-width: 0;
+        opacity: 0;
+        overflow: hidden;
+      "
+    >
+      Confirmation of your newsletter subscription. Thank you for joining us!
+    </div>
+
+    <!-- Main container -->
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="background-color: #f8fafc; padding: 40px 0"
+    >
+      <tr>
+        <td align="center">
+          <!-- Main card -->
+          <table
+            role="presentation"
+            width="600"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            class="email-container"
+            style="
+              background-color: #ffffff;
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            "
+          >
+            <!-- Color header -->
+            <tr>
+              <td
+                style="
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  padding: 40px 30px;
+                  text-align: center;
+                "
+              >
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td style="padding-bottom: 20px">
+                      <!-- Logo or icon -->
+                      <div
+                        style="
+                          width: 64px;
+                          height: 64px;
+                          margin: 0 auto;
+                          background-color: rgba(255, 255, 255, 0.2);
+                          border-radius: 50%;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                        "
+                      >
+                        <svg
+                          width="32"
+                          height="32"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"
+                            fill="white"
+                          />
+                        </svg>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <h1
+                        style="
+                          margin: 0;
+                          color: #ffffff;
+                          font-size: 32px;
+                          font-weight: 700;
+                          line-height: 1.2;
+                        "
+                      >
+                        Welcome Aboard! 🎉
+                      </h1>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Main content -->
+            <tr>
+              <td style="padding: 40px 30px" class="mobile-padding">
+                <!-- Welcome message -->
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td style="padding-bottom: 30px">
+                      <h2
+                        style="
+                          margin: 0 0 15px 0;
+                          color: #1e293b;
+                          font-size: 24px;
+                          font-weight: 600;
+                        "
+                      >
+                        Thank you for subscribing, ${name}!
+                      </h2>
+                      <p
+                        style="
+                          margin: 0 0 15px 0;
+                          color: #64748b;
+                          font-size: 16px;
+                          line-height: 1.6;
+                        "
+                      >
+                        Your newsletter subscription has been successfully
+                        confirmed. You will now receive our latest updates,
+                        tips, and exclusive offers directly in your inbox.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Subscription details table -->
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  style="
+                    margin: 30px 0;
+                    background-color: #f8fafc;
+                    border-radius: 12px;
+                    overflow: hidden;
+                  "
+                >
+                  <tr>
+                    <td>
+                      <!-- Table header -->
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                        style="background-color: #e2e8f0"
+                      >
+                        <tr>
+                          <td
+                            style="
+                              padding: 20px;
+                              border-bottom: 1px solid #cbd5e1;
+                            "
+                          >
+                            <h3
+                              style="
+                                margin: 0;
+                                color: #334155;
+                                font-size: 18px;
+                                font-weight: 600;
+                              "
+                            >
+                              📋 Subscription Details
+                            </h3>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Table body -->
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                      >
+                        <!-- Email -->
+                        <tr>
+                          <td
+                            style="
+                              padding: 16px 20px;
+                              border-bottom: 1px solid #e2e8f0;
+                            "
+                          >
+                            <table
+                              role="presentation"
+                              width="100%"
+                              cellspacing="0"
+                              cellpadding="0"
+                              border="0"
+                            >
+                              <tr>
+                                <td
+                                  width="40%"
+                                  style="
+                                    color: #64748b;
+                                    font-size: 15px;
+                                    font-weight: 500;
+                                    padding-right: 10px;
+                                  "
+                                >
+                                  Email Address:
+                                </td>
+                                <td
+                                  width="60%"
+                                  style="
+                                    color: #1e293b;
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                  "
+                                >
+                                  ${email}
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+
+                        <!-- Subscription date -->
+                        <tr>
+                          <td
+                            style="
+                              padding: 16px 20px;
+                              border-bottom: 1px solid #e2e8f0;
+                            "
+                          >
+                            <table
+                              role="presentation"
+                              width="100%"
+                              cellspacing="0"
+                              cellpadding="0"
+                              border="0"
+                            >
+                              <tr>
+                                <td
+                                  width="40%"
+                                  style="
+                                    color: #64748b;
+                                    font-size: 15px;
+                                    font-weight: 500;
+                                    padding-right: 10px;
+                                  "
+                                >
+                                  Subscription Date:
+                                </td>
+                                <td
+                                  width="60%"
+                                  style="
+                                    color: #1e293b;
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                  "
+                                >
+                                  ${subscriptionDate}
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+
+                        <!-- Sending frequency -->
+                        <tr>
+                          <td
+                            style="
+                              padding: 16px 20px;
+                              border-bottom: 1px solid #e2e8f0;
+                            "
+                          >
+                            <table
+                              role="presentation"
+                              width="100%"
+                              cellspacing="0"
+                              cellpadding="0"
+                              border="0"
+                            >
+                              <tr>
+                                <td
+                                  width="40%"
+                                  style="
+                                    color: #64748b;
+                                    font-size: 15px;
+                                    font-weight: 500;
+                                    padding-right: 10px;
+                                  "
+                                >
+                                  Frequency:
+                                </td>
+                                <td
+                                  width="60%"
+                                  style="
+                                    color: #1e293b;
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                  "
+                                >
+                                  ${frequency}
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+
+                        <!-- Subscription ID -->
+                        <tr>
+                          <td style="padding: 16px 20px">
+                            <table
+                              role="presentation"
+                              width="100%"
+                              cellspacing="0"
+                              cellpadding="0"
+                              border="0"
+                            >
+                              <tr>
+                                <td
+                                  width="40%"
+                                  style="
+                                    color: #64748b;
+                                    font-size: 15px;
+                                    font-weight: 500;
+                                    padding-right: 10px;
+                                  "
+                                >
+                                  Subscription ID:
+                                </td>
+                                <td
+                                  width="60%"
+                                  style="
+                                    color: #1e293b;
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                    font-family: monospace;
+                                  "
+                                >
+                                  #${subscriptionId}
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- What to expect section -->
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  style="margin: 30px 0"
+                >
+                  <tr>
+                    <td
+                      style="
+                        background-color: #f0f9ff;
+                        border-left: 4px solid #0ea5e9;
+                        border-radius: 8px;
+                        padding: 20px;
+                      "
+                    >
+                      <h4
+                        style="
+                          margin: 0 0 15px 0;
+                          color: #0369a1;
+                          font-size: 18px;
+                          font-weight: 600;
+                        "
+                      >
+                        📬 What to Expect
+                      </h4>
+                      <ul
+                        style="
+                          margin: 0;
+                          padding-left: 20px;
+                          color: #64748b;
+                          font-size: 15px;
+                          line-height: 1.6;
+                        "
+                      >
+                        <li style="margin-bottom: 8px">
+                          Weekly curated content and industry insights
+                        </li>
+                        <li style="margin-bottom: 8px">
+                          Exclusive offers and early access to new features
+                        </li>
+                        <li style="margin-bottom: 8px">
+                          Practical tips and tutorials
+                        </li>
+                        <li>Community updates and success stories</li>
+                      </ul>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Preferences reminder -->
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  style="
+                    margin: 30px 0;
+                    background-color: #fef3c7;
+                    border-radius: 8px;
+                    padding: 20px;
+                  "
+                >
+                  <tr>
+                    <td>
+                      <p
+                        style="
+                          margin: 0 0 10px 0;
+                          color: #92400e;
+                          font-size: 15px;
+                          font-weight: 600;
+                        "
+                      >
+                        ⚙️ Manage Your Preferences
+                      </p>
+                      <p
+                        style="
+                          margin: 0;
+                          color: #92400e;
+                          font-size: 14px;
+                          line-height: 1.5;
+                        "
+                      >
+                        You can update your preferences or unsubscribe at any
+                        time by visiting your account settings or using the link
+                        in the footer of our emails.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Call to action -->
+            <tr>
+              <td style="padding: 0 30px 40px" class="mobile-padding">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td align="center">
+                      <a
+                        href="${preferencesLink}"
+                        style="
+                          display: inline-block;
+                          background: linear-gradient(
+                            135deg,
+                            #667eea 0%,
+                            #764ba2 100%
+                          );
+                          color: white;
+                          text-decoration: none;
+                          padding: 14px 32px;
+                          border-radius: 8px;
+                          font-weight: 600;
+                          font-size: 16px;
+                        "
+                      >
+                        Manage Email Preferences
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                style="
+                  padding: 30px;
+                  background-color: #f8fafc;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td align="center" style="padding-bottom: 20px">
+                      <!-- Social icons -->
+                      <table
+                        role="presentation"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                      >
+                        <tr>
+                          <td style="padding: 0 8px">
+                            <a
+                              href="#"
+                              style="
+                                display: inline-block;
+                                width: 36px;
+                                height: 36px;
+                                background-color: #e2e8f0;
+                                border-radius: 50%;
+                                text-align: center;
+                                line-height: 36px;
+                              "
+                            >
+                              <span style="color: #64748b; font-size: 14px"
+                                >f</span
+                              >
+                            </a>
+                          </td>
+                          <td style="padding: 0 8px">
+                            <a
+                              href="#"
+                              style="
+                                display: inline-block;
+                                width: 36px;
+                                height: 36px;
+                                background-color: #e2e8f0;
+                                border-radius: 50%;
+                                text-align: center;
+                                line-height: 36px;
+                              "
+                            >
+                              <span style="color: #64748b; font-size: 14px"
+                                >t</span
+                              >
+                            </a>
+                          </td>
+                          <td style="padding: 0 8px">
+                            <a
+                              href="#"
+                              style="
+                                display: inline-block;
+                                width: 36px;
+                                height: 36px;
+                                background-color: #e2e8f0;
+                                border-radius: 50%;
+                                text-align: center;
+                                line-height: 36px;
+                              "
+                            >
+                              <span style="color: #64748b; font-size: 14px"
+                                >in</span
+                              >
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="padding-bottom: 15px">
+                      <p
+                        style="
+                          margin: 0;
+                          color: #64748b;
+                          font-size: 14px;
+                          line-height: 1.5;
+                        "
+                      >
+                        You're receiving this email because you subscribed to
+                        our newsletter.
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center">
+                      <p
+                        style="
+                          margin: 0;
+                          color: #94a3b8;
+                          font-size: 13px;
+                          line-height: 1.5;
+                        "
+                      >
+                        © ${currentYear} ${companyName}. All rights reserved.<br />
+                        ${companyAddress}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="padding-top: 20px">
+                      <p style="margin: 0">
+                        <a
+                          href="${unsubscribeLink}"
+                          style="
+                            color: #64748b;
+                            font-size: 13px;
+                            text-decoration: underline;
+                          "
+                        >
+                          Unsubscribe
+                        </a>
+                        <span style="color: #cbd5e1; margin: 0 10px">•</span>
+                        <a
+                          href="${privacyLink}"
+                          style="
+                            color: #64748b;
+                            font-size: 13px;
+                            text-decoration: underline;
+                          "
+                        >
+                          Privacy Policy
+                        </a>
+                        <span style="color: #cbd5e1; margin: 0 10px">•</span>
+                        <a
+                          href="${contactLink}"
+                          style="
+                            color: #64748b;
+                            font-size: 13px;
+                            text-decoration: underline;
+                          "
+                        >
+                          Contact Us
+                        </a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -15,9 +15,15 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters"],
-      select: false, // Don't return password by default
+      required: function () {
+        return this.provider === "local";
+      },
+      select: false,
+    },
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
 
     // User role
@@ -71,11 +77,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    provider: {
-      type: String,
-      enum: ["local", "google"],
-      default: "local",
-    },
+
     isVerified: {
       type: Boolean,
       default: false,
@@ -142,9 +144,10 @@ userSchema.virtual("fullName").get(function () {
 
 // PRE-SAVE HOOK: Hash password
 userSchema.pre("save", async function () {
+  if (!this.password) return;
   if (!this.isModified("password")) return;
 
-  const salt = await bcrypt.genSalt(10);
+  const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
 });
 

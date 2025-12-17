@@ -33,4 +33,19 @@ coverage/
 
 
 
-firebase-service-account.json firebase-service-account.json
+# Firebase Service Account (contient des clés secrètes)
+serviceAccountKey.json
+config/serviceAccountKey.json
+**/serviceAccountKey.json
+
+
+
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+app.log

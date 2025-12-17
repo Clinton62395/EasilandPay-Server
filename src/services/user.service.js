@@ -60,6 +60,7 @@ class UserService {
         role,
         fullName,
         phoneNumber,
+        provider,
         termsCondition,
         companyInfo,
         realtorInfo,
@@ -89,6 +90,7 @@ class UserService {
         termsCondition,
         lastName,
         phoneNumber,
+        provider,
         companyInfo: role === "company" ? companyInfo : undefined,
         realtorInfo: role === "realtor" ? realtorInfo : undefined,
       });
@@ -134,8 +136,6 @@ class UserService {
       session.endSession();
     }
   };
-
-
 
   // ============================================
   // LOGIN
@@ -320,365 +320,412 @@ YourApp Team`;
     }
   };
 
-  // ============================================
-  // RESET PASSWORD
-  // ============================================
-
-  // services/userService.js
-
-  resetPassword = async (token, newPassword) => {
-    try {
-      // 1. Trouver l'utilisateur avec token valide
-      const user = await User.findOne({
-        resetPasswordToken: token,
-        resetPasswordExpires: { $gt: new Date() },
-      }).select("+password +resetPasswordToken +resetPasswordExpires");
-
-      if (!user) {
-        return {
-          success: false,
-          message: "Invalid or expired reset token",
-        };
-      }
-
-      // 2. Vérifier que le nouveau mot de passe est différent de l'ancien
-      const isSamePassword = await user.comparePassword(newPassword);
-      if (isSamePassword) {
-        return {
-          success: false,
-          message: "New password must be different from the old one",
-        };
-      }
-
-      // 3. Assigner le nouveau mot de passe → sera hashé automatiquement par le pre-save hook
-      user.password = newPassword;
-
-      // 4. Supprimer le token et sa date d'expiration
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpires = undefined;
-
-      // 5. Sauvegarder l'utilisateur avec le nouveau mot de passe
-      await user.save();
-
-      return {
-        success: true,
-        message: "Password has been reset successfully",
-      };
-    } catch (error) {
-      console.error("Reset password error:", error);
-      return {
-        success: false,
-        message: "An error occurred while resetting password",
-      };
-    }
-  };
-
-  // ============================================
-  // CHANGE PASSWORD
-  // ============================================
-
-  changePassword = async (userId, currentPassword, newPassword) => {
-    const user = await User.findById(userId).select("+password");
-
-    if (!user) {
-      throw new AppError("User not found", 404);
+  // ==========================================
+  // VERIFY RESET CODE & RETURN RESET TOKEN
+  // ==========================================
+  otpVerification = async (email, code) => {
+    if (!email || !code) {
+      throw new AppError("Email and verification code are required", 400);
     }
 
-    const isPasswordCorrect = await user.comparePassword(currentPassword);
-    if (!isPasswordCorrect) {
-      throw new AppError("Current password is incorrect", 401);
-    }
+    // Hash du code reçu
+    const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
 
-    user.password = newPassword;
-    await user.save();
-
-    return { message: "Password changed successfully" };
-  };
-
-  // ============================================
-  // GET USER BY ID
-  // ============================================
-
-  getUserById = async (userId) => {
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      throw new AppError("Invalid user ID", 400);
-    }
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      throw new AppError("User not found", 404);
-    }
-
-    return user;
-  };
-
-  // ============================================
-  // UPDATE PROFILE
-  // ============================================
-
-  updateProfile = async (userId, updates) => {
-    const forbiddenFields = [
-      "password",
-      "email",
-      "role",
-      "createdAt",
-      "refreshToken",
-    ];
-    forbiddenFields.forEach((field) => delete updates[field]);
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { ...updates },
-      { new: true, runValidators: true }
+    // Trouver l'utilisateur
+    const user = await User.findOne({
+      email,
+      verificationCode: hashedCode,
+      verificationCodeExpires: { $gt: Date.now() },
+    }).select(
+      "+verificationCode +verificationCodeExpires +passwordResetToken +passwordResetExpires"
     );
 
     if (!user) {
-      throw new AppError("User not found", 404);
+      throw new AppError("Invalid or expired verification code", 400);
     }
 
-    return user;
-  };
+    // Générer reset token (clair)
+    const resetToken = crypto.randomBytes(32).toString("hex");
 
-  // ============================================
-  // GET ALL USERS
-  // ============================================
-
-  getAllUsers = async (filters = {}, page = 1, limit = 20) => {
-    const { role, isActive, search } = filters;
-    const query = {};
-
-    if (role) query.role = role;
-    if (isActive !== undefined) {
-      query.isActive = isActive === "true" || isActive === true;
-    }
-
-    if (search) {
-      query.$or = [
-        { firstName: { $regex: search, $options: "i" } },
-        { lastName: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const [users, total] = await Promise.all([
-      User.find(query)
-        .select("-password -refreshToken")
-        .limit(parseInt(limit))
-        .skip(skip)
-        .sort({ createdAt: -1 }),
-      User.countDocuments(query),
-    ]);
-
-    return {
-      users,
-      pagination: {
-        total,
-        page: parseInt(page),
-        pages: Math.ceil(total / parseInt(limit)),
-        limit: parseInt(limit),
-      },
-    };
-  };
-
-  // ============================================
-  // GET USERS BY ROLE
-  // ============================================
-
-  getUsersByRole = async (role) => {
-    const validRoles = ["buyer", "realtor", "company", "staff", "admin"];
-    if (!validRoles.includes(role)) {
-      throw new AppError("Invalid role", 400);
-    }
-
-    const users = await User.find({ role, isActive: true })
-      .select("-password -refreshToken")
-      .sort({ createdAt: -1 });
-
-    return users;
-  };
-
-  // ============================================
-  // SUSPEND USER
-  // ============================================
-
-  suspendUser = async (userId) => {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { isActive: false, refreshToken: null },
-      { new: true }
-    );
-
-    if (!user) {
-      throw new AppError("User not found", 404);
-    }
-
-    return user;
-  };
-
-  // ============================================
-  // ACTIVATE USER
-  // ============================================
-
-  activateUser = async (userId) => {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { isActive: true },
-      { new: true }
-    );
-
-    if (!user) {
-      throw new AppError("User not found", 404);
-    }
-
-    return user;
-  };
-
-  // ============================================
-  // DELETE USER
-  // ============================================
-
-  deleteUser = async (userId) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-      const user = await User.findById(userId).session(session);
-      if (!user) {
-        throw new AppError("User not found", 404);
-      }
-
-      // Check wallet balance - CORRECTION: utiliser "user" au lieu de "userId"
-      const wallet = await Wallet.findOne({ user: userId }).session(session);
-      if (wallet && wallet.balance > 0) {
-        throw new AppError(
-          "Cannot delete user with non-zero wallet balance",
-          400
-        );
-      }
-
-      if (wallet) {
-        await Wallet.findByIdAndDelete(wallet._id).session(session);
-      }
-
-      await User.findByIdAndDelete(userId).session(session);
-
-      await session.commitTransaction();
-      return { message: "User deleted successfully" };
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
-  };
-
-  // ============================================
-  // UPDATE REALTOR BANK DETAILS
-  // ============================================
-
-  updateRealtorBankDetails = async (realtorId, bankDetails) => {
-    const user = await User.findById(realtorId);
-
-    if (!user) {
-      throw new AppError("Realtor not found", 404);
-    }
-
-    if (user.role !== "realtor") {
-      throw new AppError("User is not a realtor", 400);
-    }
-
-    user.realtorInfo = {
-      ...user.realtorInfo,
-      bankDetails: {
-        accountNumber: bankDetails.accountNumber,
-        bankCode: bankDetails.bankCode,
-        bankName: bankDetails.bankName,
-        accountName: bankDetails.accountName,
-      },
-    };
-
-    await user.save();
-    return user;
-  };
-
-  // ============================================
-  // GET USER STATISTICS
-  // ============================================
-
-  getUserStatistics = async () => {
-    const [totalUsers, activeUsers, usersByRole, newUsers, recentUsers] =
-      await Promise.all([
-        User.countDocuments(),
-        User.countDocuments({ isActive: true }),
-        User.aggregate([
-          {
-            $group: {
-              _id: "$role",
-              count: { $sum: 1 },
-              active: { $sum: { $cond: ["$isActive", 1, 0] } },
-            },
-          },
-        ]),
-        User.countDocuments({
-          createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-        }),
-        User.find()
-          .select("firstName lastName email role createdAt")
-          .sort({ createdAt: -1 })
-          .limit(10),
-      ]);
-
-    return {
-      totalUsers,
-      activeUsers,
-      inactiveUsers: totalUsers - activeUsers,
-      usersByRole,
-      newUsersLast30Days: newUsers,
-      recentUsers,
-    };
-  };
-
-  // ============================================
-  // VERIFY EMAIL
-  // ============================================
-
-  generateEmailVerificationToken = async (userId) => {
-    const token = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    await User.findByIdAndUpdate(userId, {
-      emailVerificationToken: hashedToken,
-      emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    });
-
-    return token;
-  };
-
-  verifyEmail = async (verificationToken) => {
-    const hashedToken = crypto
+    // Hasher le reset token avant stockage
+    user.passwordResetToken = crypto
       .createHash("sha256")
-      .update(verificationToken)
+      .update(resetToken)
       .digest("hex");
 
-    const user = await User.findOne({
-      emailVerificationToken: hashedToken,
-      emailVerificationExpires: { $gt: Date.now() },
-    });
+    user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 min
 
-    if (!user) {
-      throw new AppError("Invalid or expired verification token", 400);
-    }
+    // Nettoyer le code OTP
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
 
-    user.isVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpires = undefined;
     await user.save();
 
-    return { message: "Email verified successfully" };
+    return {
+      success: true,
+      message: "Verification successful",
+      resetToken,
+    };
   };
 }
+// ============================================
+// RESET PASSWORD
+// ============================================
+
+// services/userService.js
+
+resetPassword = async (token, newPassword) => {
+  try {
+    // 1. Trouver l'utilisateur avec token valide
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    }).select("+password +resetPasswordToken +resetPasswordExpires");
+
+    if (!user) {
+      return {
+        success: false,
+        message: "Invalid or expired reset token",
+      };
+    }
+
+    // 2. Vérifier que le nouveau mot de passe est différent de l'ancien
+    const isSamePassword = await user.comparePassword(newPassword);
+    if (isSamePassword) {
+      return {
+        success: false,
+        message: "New password must be different from the old one",
+      };
+    }
+
+    // 3. Assigner le nouveau mot de passe → sera hashé automatiquement par le pre-save hook
+    user.password = newPassword;
+
+    // 4. Supprimer le token et sa date d'expiration
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    // 5. Sauvegarder l'utilisateur avec le nouveau mot de passe
+    await user.save();
+
+    return {
+      success: true,
+      message: "Password has been reset successfully",
+    };
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return {
+      success: false,
+      message: "An error occurred while resetting password",
+    };
+  }
+};
+
+// ============================================
+// CHANGE PASSWORD
+// ============================================
+
+changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await User.findById(userId).select("+password");
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  const isPasswordCorrect = await user.comparePassword(currentPassword);
+  if (!isPasswordCorrect) {
+    throw new AppError("Current password is incorrect", 401);
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return { message: "Password changed successfully" };
+};
+
+// ============================================
+// GET USER BY ID
+// ============================================
+
+getUserById = async (userId) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError("Invalid user ID", 400);
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+};
+
+// ============================================
+// UPDATE PROFILE
+// ============================================
+
+updateProfile = async (userId, updates) => {
+  const forbiddenFields = [
+    "password",
+    "email",
+    "role",
+    "createdAt",
+    "refreshToken",
+  ];
+  forbiddenFields.forEach((field) => delete updates[field]);
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { ...updates },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+};
+
+// ============================================
+// GET ALL USERS
+// ============================================
+
+getAllUsers = async (filters = {}, page = 1, limit = 20) => {
+  const { role, isActive, search } = filters;
+  const query = {};
+
+  if (role) query.role = role;
+  if (isActive !== undefined) {
+    query.isActive = isActive === "true" || isActive === true;
+  }
+
+  if (search) {
+    query.$or = [
+      { firstName: { $regex: search, $options: "i" } },
+      { lastName: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const [users, total] = await Promise.all([
+    User.find(query)
+      .select("-password -refreshToken")
+      .limit(parseInt(limit))
+      .skip(skip)
+      .sort({ createdAt: -1 }),
+    User.countDocuments(query),
+  ]);
+
+  return {
+    users,
+    pagination: {
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+      limit: parseInt(limit),
+    },
+  };
+};
+
+// ============================================
+// GET USERS BY ROLE
+// ============================================
+
+getUsersByRole = async (role) => {
+  const validRoles = ["buyer", "realtor", "company", "staff", "admin"];
+  if (!validRoles.includes(role)) {
+    throw new AppError("Invalid role", 400);
+  }
+
+  const users = await User.find({ role, isActive: true })
+    .select("-password -refreshToken")
+    .sort({ createdAt: -1 });
+
+  return users;
+};
+
+// ============================================
+// SUSPEND USER
+// ============================================
+
+suspendUser = async (userId) => {
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { isActive: false, refreshToken: null },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+};
+
+// ============================================
+// ACTIVATE USER
+// ============================================
+
+activateUser = async (userId) => {
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { isActive: true },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+};
+
+// ============================================
+// DELETE USER
+// ============================================
+
+deleteUser = async (userId) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const user = await User.findById(userId).session(session);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    // Check wallet balance - CORRECTION: utiliser "user" au lieu de "userId"
+    const wallet = await Wallet.findOne({ user: userId }).session(session);
+    if (wallet && wallet.balance > 0) {
+      throw new AppError(
+        "Cannot delete user with non-zero wallet balance",
+        400
+      );
+    }
+
+    if (wallet) {
+      await Wallet.findByIdAndDelete(wallet._id).session(session);
+    }
+
+    await User.findByIdAndDelete(userId).session(session);
+
+    await session.commitTransaction();
+    return { message: "User deleted successfully" };
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
+// ============================================
+// UPDATE REALTOR BANK DETAILS
+// ============================================
+
+updateRealtorBankDetails = async (realtorId, bankDetails) => {
+  const user = await User.findById(realtorId);
+
+  if (!user) {
+    throw new AppError("Realtor not found", 404);
+  }
+
+  if (user.role !== "realtor") {
+    throw new AppError("User is not a realtor", 400);
+  }
+
+  user.realtorInfo = {
+    ...user.realtorInfo,
+    bankDetails: {
+      accountNumber: bankDetails.accountNumber,
+      bankCode: bankDetails.bankCode,
+      bankName: bankDetails.bankName,
+      accountName: bankDetails.accountName,
+    },
+  };
+
+  await user.save();
+  return user;
+};
+
+// ============================================
+// GET USER STATISTICS
+// ============================================
+
+getUserStatistics = async () => {
+  const [totalUsers, activeUsers, usersByRole, newUsers, recentUsers] =
+    await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ isActive: true }),
+      User.aggregate([
+        {
+          $group: {
+            _id: "$role",
+            count: { $sum: 1 },
+            active: { $sum: { $cond: ["$isActive", 1, 0] } },
+          },
+        },
+      ]),
+      User.countDocuments({
+        createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+      }),
+      User.find()
+        .select("firstName lastName email role createdAt")
+        .sort({ createdAt: -1 })
+        .limit(10),
+    ]);
+
+  return {
+    totalUsers,
+    activeUsers,
+    inactiveUsers: totalUsers - activeUsers,
+    usersByRole,
+    newUsersLast30Days: newUsers,
+    recentUsers,
+  };
+};
+
+// ============================================
+// VERIFY EMAIL
+// ============================================
+
+generateEmailVerificationToken = async (userId) => {
+  const token = crypto.randomBytes(32).toString("hex");
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  await User.findByIdAndUpdate(userId, {
+    emailVerificationToken: hashedToken,
+    emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+  });
+
+  return token;
+};
+
+verifyEmail = async (verificationToken) => {
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(verificationToken)
+    .digest("hex");
+
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new AppError("Invalid or expired verification token", 400);
+  }
+
+  user.isVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  await user.save();
+
+  return { message: "Email verified successfully" };
+};
 
 export default new UserService();
