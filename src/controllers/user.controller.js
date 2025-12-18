@@ -86,7 +86,8 @@ class AuthController {
     res.status(200).json({
       success: true,
       message: result.message,
-      // Don't send token in production, only via email
+      expiresIn: result.expiresIn,
+
       ...(process.env.NODE_ENV === "development" && {
         resetToken: result.resetToken,
       }),
@@ -115,6 +116,8 @@ class AuthController {
   resetPasswordController = catchAsynch(async (req, res, next) => {
     const { token, newPassword } = req.body;
 
+    console.log("token and newpassoword ===>", req.body);
+    console.log("token and newpassoword ===>", !!req.body);
     if (!token || !newPassword) {
       throw new AppError("Token, and new password are required", 400);
     }

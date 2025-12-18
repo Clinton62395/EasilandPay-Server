@@ -10,7 +10,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/transactions/me:
+ * /transaction/me:
  *   get:
  *     summary: Get current user transactions
  *     description: Retrieve transaction history for the currently logged-in user with optional filters
@@ -83,7 +83,7 @@ router.get("/me", authenticate, TransactionController.getUserTransactions);
 
 /**
  * @swagger
- * /api/transactions/me/summary:
+ * /transaction/me/summary:
  *   get:
  *     summary: Get current user transaction summary
  *     description: Get a summary of transactions grouped by type and current wallet balance
@@ -136,7 +136,7 @@ router.get(
 
 /**
  * @swagger
- * /api/transactions/credit:
+ * /transaction/credit:
  *   post:
  *     summary: Credit wallet
  *     description: Add funds to user wallet (funding/top-up)
@@ -199,7 +199,7 @@ router.post("/credit", authenticate, TransactionController.creditWallet);
 
 /**
  * @swagger
- * /api/transactions/debit:
+ * /transaction/debit:
  *   post:
  *     summary: Debit wallet
  *     description: Withdraw or make payment from wallet
@@ -248,11 +248,16 @@ router.post("/credit", authenticate, TransactionController.creditWallet);
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  */
-router.post("/debit", authenticate, TransactionController.debitWallet);
+router.post(
+  "/debit",
+  authenticate,
+  authorize("admin", "buyer", "realtor"),
+  TransactionController.debitWallet
+);
 
 /**
  * @swagger
- * /api/transactions/{id}/cancel:
+ * /transaction/{id}/cancel:
  *   put:
  *     summary: Cancel transaction
  *     description: Cancel a pending transaction
@@ -284,7 +289,7 @@ router.put(
 
 /**
  * @swagger
- * /api/transactions/reference/{reference}:
+ * /transaction/reference/{reference}:
  *   get:
  *     summary: Get transaction by reference
  *     description: Retrieve a specific transaction using its unique reference
@@ -328,7 +333,7 @@ router.get(
 
 /**
  * @swagger
- * /api/transactions/{id}:
+ * /transaction/{id}:
  *   get:
  *     summary: Get transaction by ID
  *     description: Retrieve a specific transaction by its ID
@@ -373,7 +378,7 @@ router.get("/:id", authenticate, TransactionController.getTransactionById);
 
 /**
  * @swagger
- * /api/transactions/admin/all:
+ * /transaction/admin/all:
  *   get:
  *     summary: Get all transactions (Admin/Staff)
  *     description: Retrieve all transactions across all users with filters and pagination
@@ -436,13 +441,13 @@ router.get("/:id", authenticate, TransactionController.getTransactionById);
 router.get(
   "/admin/all",
   authenticate,
-  authorize("admin", "staff"),
+  authorize("admin"),
   TransactionController.getAllTransactions
 );
 
 /**
  * @swagger
- * /api/transactions/admin/statistics:
+ * /transaction/admin/statistics:
  *   get:
  *     summary: Get transaction statistics (Admin/Staff)
  *     description: Get overall transaction statistics including totals by type and status
@@ -510,13 +515,13 @@ router.get(
 router.get(
   "/admin/statistics",
   authenticate,
-  authorize("admin", "staff"),
+  authorize("admin"),
   TransactionController.getTransactionStatistics
 );
 
 /**
  * @swagger
- * /api/transactions/admin/create:
+ * /transaction/admin/create:
  *   post:
  *     summary: Create transaction manually (Admin/Staff)
  *     description: Manually create a transaction for any user
@@ -562,13 +567,13 @@ router.get(
 router.post(
   "/admin/create",
   authenticate,
-  authorize("admin", "staff"),
+  authorize("admin"),
   TransactionController.createTransaction
 );
 
 /**
  * @swagger
- * /api/transactions/admin/{id}/status:
+ * /transaction/admin/{id}/status:
  *   put:
  *     summary: Update transaction status (Admin/Staff)
  *     description: Update the status of a transaction (SUCCESS, FAILED, CANCELLED)
@@ -617,13 +622,13 @@ router.post(
 router.put(
   "/admin/:id/status",
   authenticate,
-  authorize("admin", "staff"),
+  authorize("admin"),
   TransactionController.updateTransactionStatus
 );
 
 /**
  * @swagger
- * /api/transactions/admin/commission:
+ * /transaction/admin/commission:
  *   post:
  *     summary: Pay commission to realtor (Admin)
  *     description: Process commission payment to a realtor
@@ -680,7 +685,7 @@ router.post(
 
 /**
  * @swagger
- * /api/transactions/admin/refund:
+ * /transaction/admin/refund:
  *   post:
  *     summary: Process refund (Admin)
  *     description: Issue a refund to a user

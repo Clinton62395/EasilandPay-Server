@@ -1,4 +1,6 @@
+import Transaction from "../models/Transaction.moddels.js";
 import Wallet from "../models/Wallet.models.js";
+import { AppError } from "../utils/appError.utils.js";
 
 class WalletService {
   async getWallet(userId) {

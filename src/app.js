@@ -18,6 +18,7 @@ import Swagger from "./docs/swagger.js";
 import authRealtors from "./routes/realtors.routes.js";
 import authGoogle from "./routes/googleRegister.routes.js";
 import NewLetter from "./routes/newsLetter.routes.js";
+import authCommission from "./routes/commission.routes.js";
 
 dotenv.config();
 
@@ -53,11 +54,14 @@ app.use("/realtor", authRealtors);
 // Routes for advanced authentication or editor operations (permissions, roles, etc.)
 app.use("/api/auth", authEditors);
 
+// Routes for  commission  operations 
+app.use("/api/auth", authCommission);
+
 // Routes for financial plan management (CRUD plans, calculations, activation/deactivation)
 app.use("/api/plan", authPlan);
 
 // Routes for transaction management (credit, debit, commission, refund, history)
-app.use("/api/transaction", authTransaction);
+app.use("/transaction", authTransaction);
 
 // Routes for google registering management
 app.use("/api/", authGoogle);

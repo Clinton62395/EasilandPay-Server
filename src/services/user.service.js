@@ -9,6 +9,8 @@ import { transporter } from "../configs/nodemailer.js";
 import fs from "fs";
 import path from "path";
 
+
+
 dotenv.config();
 
 class UserService {
@@ -236,6 +238,7 @@ class UserService {
       const user = await User.findOne({ email }).select(
         "+verificationCode +verificationCodeExpires"
       );
+
       // Sécurité : toujours retourner le même message
       const successResponse = {
         success: true,
@@ -246,6 +249,7 @@ class UserService {
         return successResponse;
       }
 
+      const expiresIn = 10 * 60 * 1000; // 10 min
       // Générer un code à 6 chiffres
       const generateSixDigitCode = () => {
         return Math.floor(100000 + Math.random() * 900000).toString(); // 100000-999999
@@ -261,7 +265,6 @@ class UserService {
       user.verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
       await user.save();
-
       // Lire le template
       const templatePath = path.join(
         process.cwd(),
@@ -273,11 +276,10 @@ class UserService {
       let html = fs.readFileSync(templatePath, "utf-8");
 
       // CORRECTION : Adaptez le template pour afficher le code
-      // Votre template doit maintenant afficher ${code} au lieu de ${resetLink}
       html = html
-        .replace(/\${code}/g, verificationCode) // Changé : code au lieu de resetLink
+        .replace(/\${code}/g, verificationCode)
         .replace(/\${name}/g, user.fullName || user.lastName || "User")
-        .replace(/\${expirationTime}/g, "10 minutes"); // Ajout du temps d'expiration
+        .replace(/\${expirationTime}/g, "10 minutes");
 
       // Version texte adaptée au code
       const textVersion = `Hello ${user.fullName || "User"},
@@ -308,18 +310,22 @@ YourApp Team`;
 
       console.log(`✅ Verification code sent to ${user.email}`);
 
-      return successResponse;
+      // ✅ RETOURNER ICI avec les infos d'expiration
+      return {
+        success: true,
+        message: "If that email exists, a reset code has been sent",
+        expiresIn, // ✅ `user` existe ici
+      };
     } catch (error) {
       console.error("Error in forgotPassword:", error);
 
-      // Toujours retourner le même message pour la sécurité
+      // ✅ RETOURNER dans le catch aussi
       return {
-        success: true,
+        success: true, // Toujours true pour la sécurité
         message: "If that email exists, a reset code has been sent",
       };
     }
   };
-
   // ==========================================
   // VERIFY RESET CODE & RETURN RESET TOKEN
   // ==========================================
@@ -353,7 +359,7 @@ YourApp Team`;
       .update(resetToken)
       .digest("hex");
 
-    user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+    user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 min
 
     // Nettoyer le code OTP
     user.verificationCode = undefined;
@@ -376,20 +382,47 @@ YourApp Team`;
 
   resetPassword = async (token, newPassword) => {
     try {
-      // 1. Trouver l'utilisateur avec token valide
+      // 1. HASHER LE TOKEN avant de chercher !
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+      console.log("🔍 DEBUG resetPassword:");
+      console.log("- Token reçu (clair):", token);
+      console.log("- Token hashé:", hashedToken);
+
+      // 2. Trouver l'utilisateur avec le token HASHÉ
       const user = await User.findOne({
-        resetPasswordToken: token,
+        resetPasswordToken: hashedToken, // ← Chercher le HASH
         resetPasswordExpires: { $gt: new Date() },
       }).select("+password +resetPasswordToken +resetPasswordExpires");
 
+      console.log("Utilisateur trouvé:", user);
+      console.log("Utilisateur existe?", !!user);
+
       if (!user) {
+        console.log("❌ Aucun utilisateur avec ce token hashé");
+        // Debug: Vérifier ce qui est stocké en base
+        const allUsers = await User.find({
+          resetPasswordToken: { $exists: true },
+        }).select("email resetPasswordToken resetPasswordExpires");
+        console.log(
+          "Tokens en base:",
+          allUsers.map((u) => ({
+            email: u.email,
+            token: u.resetPasswordToken,
+            expires: u.resetPasswordExpires,
+          }))
+        );
+
         return {
           success: false,
           message: "Invalid or expired reset token",
         };
       }
 
-      // 2. Vérifier que le nouveau mot de passe est différent de l'ancien
+      // 3. Vérifier que le nouveau mot de passe est différent de l'ancien
       const isSamePassword = await user.comparePassword(newPassword);
       if (isSamePassword) {
         return {
@@ -398,14 +431,14 @@ YourApp Team`;
         };
       }
 
-      // 3. Assigner le nouveau mot de passe → sera hashé automatiquement par le pre-save hook
+      // 4. Assigner le nouveau mot de passe
       user.password = newPassword;
 
-      // 4. Supprimer le token et sa date d'expiration
+      // 5. Supprimer le token et sa date d'expiration
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
 
-      // 5. Sauvegarder l'utilisateur avec le nouveau mot de passe
+      // 6. Sauvegarder
       await user.save();
 
       return {
@@ -420,7 +453,6 @@ YourApp Team`;
       };
     }
   };
-
   // ============================================
   // CHANGE PASSWORD
   // ============================================
