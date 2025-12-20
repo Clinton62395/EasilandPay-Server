@@ -505,6 +505,128 @@ const swaggerOptions = {
             createdAt: { type: "string", format: "date-time" },
           },
         },
+        // Payment schemas
+        TransactionResponse: {
+          type: "object",
+          properties: {
+            success: { type: "boolean", example: true },
+            data: {
+              type: "object",
+              properties: {
+                status: { type: "string", example: "SUCCESS" },
+                transaction: { $ref: "#/components/schemas/Transaction" },
+              },
+            },
+          },
+        },
+
+        PaymentInitializeRequest: {
+          type: "object",
+          required: ["amountInNaira", "userId"],
+          properties: {
+            amountInNaira: {
+              type: "number",
+              example: 5000,
+              description: "Amount in Nigerian Naira",
+            },
+            userId: {
+              type: "string",
+              example: "64a1b2c3d4e5f67890123456",
+            },
+          },
+        },
+
+        PaymentInitializeResponse: {
+          type: "object",
+          properties: {
+            success: { type: "boolean", example: true },
+            message: {
+              type: "string",
+              example: "Payment initialized successfully",
+            },
+            data: {
+              type: "object",
+              properties: {
+                paymentLink: {
+                  type: "string",
+                  example:
+                    "https://checkout.flutterwave.com/v3/hosted/pay/abc123",
+                },
+                reference: {
+                  type: "string",
+                  example: "FLW_CREDIT_1681234567890_1234",
+                },
+                transactionId: {
+                  type: "string",
+                  example: "64a1b2c3d4e5f67890123456",
+                },
+              },
+            },
+          },
+        },
+
+        WithdrawalRequest: {
+          type: "object",
+          required: ["amountInNaira", "account_bank", "account_number"],
+          properties: {
+            amountInNaira: {
+              type: "number",
+              example: 10000,
+              minimum: 100,
+            },
+            account_bank: {
+              type: "string",
+              example: "044",
+              description: "Bank code (044 for Access Bank)",
+            },
+            account_number: {
+              type: "string",
+              example: "0690000032",
+            },
+            beneficiary_name: {
+              type: "string",
+              example: "John Doe",
+            },
+            userId: {
+              type: "string",
+              example: "64a1b2c3d4e5f67890123456",
+            },
+          },
+        },
+
+        WebhookHeader: {
+          type: "object",
+          properties: {
+            "verif-hash": {
+              type: "string",
+              description: "Flutterwave webhook signature",
+              example: "flw_verif_hash_abc123",
+            },
+          },
+        },
+
+        // Si le schéma Transaction n'existe pas, ajoute-le aussi :
+        Transaction: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            userId: { type: "string" },
+            type: {
+              type: "string",
+              enum: ["CREDIT", "DEBIT", "COMMISSION", "REFUND"],
+            },
+            amountInKobo: { type: "number" },
+            reference: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["PENDING", "SUCCESS", "FAILED", "CANCELLED"],
+            },
+            balanceAfter: { type: "number" },
+            description: { type: "string" },
+            metadata: { type: "object" },
+            createdAt: { type: "string", format: "date-time" },
+          },
+        },
 
         // Editor schemas
         Editor: {
@@ -668,6 +790,10 @@ const swaggerOptions = {
       {
         name: "Admin",
         description: "Authentication endpoints",
+      },
+      {
+        name: "Payments",
+        description: "Payment processing with Flutterwave",
       },
     ],
   },

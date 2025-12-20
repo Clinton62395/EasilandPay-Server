@@ -29,8 +29,10 @@ const transactionSchema = new mongoose.Schema({
     type: Number,
     required: true,
     validate: {
-      validator: Number.isInteger,
-      message: "Amount must be an integer (kobo)",
+      validator: function (value) {
+        return Number.isInteger(value) && value > 0;
+      },
+      message: "Amount must be a positive integer (in kobo)",
     },
   },
 
@@ -95,7 +97,12 @@ const transactionSchema = new mongoose.Schema({
     errorMessage: String,
     paystackResponse: mongoose.Schema.Types.Mixed,
   },
-
+  // Dans le schéma, ajouter :
+  fees: {
+    processingFee: { type: Number, default: 0 }, // Frais de traitement
+    gatewayFee: { type: Number, default: 0 }, // Frais de la passerelle
+    totalFees: { type: Number, default: 0 }, // Total des frais
+  },
   // Timestamps
   createdAt: {
     type: Date,
@@ -116,9 +123,45 @@ transactionSchema.virtual("amount").get(function () {
 
 // STATIC METHOD: Générer reference unique
 transactionSchema.statics.generateReference = function (type, userId) {
-  return `${type}_${Date.now()}_${userId}`;
+  const random = Math.floor(Math.random() * 10000); // 4 chiffres aléatoires
+  return `${type}_${Date.now()}_${userId}_${random}`;
 };
 
+// Méthode pour marquer comme succès
+transactionSchema.methods.markAsSuccess = function (
+  balanceAfter,
+  gatewayResponse = null
+) {
+  this.status = "SUCCESS";
+  this.balanceAfter = balanceAfter;
+  this.metadata.completedAt = new Date();
+  if (gatewayResponse) {
+    this.metadata.gatewayResponse = gatewayResponse;
+  }
+  return this.save();
+};
+
+// Méthode pour marquer comme échoué
+transactionSchema.methods.markAsFailed = function (
+  errorMessage,
+  gatewayResponse = null
+) {
+  this.status = "FAILED";
+  this.metadata.failedAt = new Date();
+  this.metadata.errorMessage = errorMessage;
+  if (gatewayResponse) {
+    this.metadata.gatewayResponse = gatewayResponse;
+  }
+  return this.save();
+};
+
+// Méthode pour annuler
+transactionSchema.methods.cancel = function (reason) {
+  this.status = "CANCELLED";
+  this.metadata.cancelledAt = new Date();
+  this.metadata.cancellationReason = reason;
+  return this.save();
+};
 // STATIC METHOD: Vérifier si reference existe (idempotency)
 transactionSchema.statics.referenceExists = async function (reference) {
   const count = await this.countDocuments({ reference });

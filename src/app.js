@@ -11,7 +11,6 @@ import mongoSanitize from "express-mongo-sanitize";
 import authEditors from "./routes/editors.routes.js";
 import authPlan from "./routes/plan.routes.js";
 import authWallet from "./routes/wallet.routes.js";
-import webhookRoute from "./routes/webhook.routes.js";
 import authTransaction from "./routes/transaction.routes.js";
 import authRoutes from "./routes/user.routes.js";
 import Swagger from "./docs/swagger.js";
@@ -19,6 +18,7 @@ import authRealtors from "./routes/realtors.routes.js";
 import authGoogle from "./routes/googleRegister.routes.js";
 import NewLetter from "./routes/newsLetter.routes.js";
 import authCommission from "./routes/commission.routes.js";
+import authPayment from "./routes/payment.routes.js";
 
 dotenv.config();
 
@@ -54,7 +54,7 @@ app.use("/realtor", authRealtors);
 // Routes for advanced authentication or editor operations (permissions, roles, etc.)
 app.use("/api/auth", authEditors);
 
-// Routes for  commission  operations 
+// Routes for  commission  operations
 app.use("/api/auth", authCommission);
 
 // Routes for financial plan management (CRUD plans, calculations, activation/deactivation)
@@ -63,14 +63,15 @@ app.use("/api/plan", authPlan);
 // Routes for transaction management (credit, debit, commission, refund, history)
 app.use("/transaction", authTransaction);
 
+//
+app.use("/transaction", authPayment);
+
 // Routes for google registering management
 app.use("/api/", authGoogle);
 // Routes for newsLetter  management
 app.use("/newsletter/", NewLetter);
 
 // Route to receive PSP webhooks (Flutterwave, Paystack, etc.)
-// These webhooks automatically update the wallet after payments or refunds
-app.use("/webhook", webhookRoute);
 
 // (You can add your other routes here)
 
