@@ -9,11 +9,11 @@ import {
   refreshTokenValidation,
   forgotPasswordValidation,
   changePasswordValidation,
-  updateProfileValidation,
   roleParamValidation,
   tokenParamValidation,
   getUsersQueryValidation,
   resetPasswordValidator,
+  updateProfileValidation,
 } from "../validations/auth.validators.js";
 import validate from "../validations/validatorResult.js";
 import { verifyFirebaseToken } from "../middlewares/verifyGoogleToken.middleware.js";
@@ -349,12 +349,7 @@ router.post("/logout", authenticate, AuthController.logout);
  */
 
 // Get Current User
-router.get(
-  "/:id",
-  authenticate,
-  authorize("admin"),
-  AuthController.getCurrentUser
-);
+router.get("/me", authenticate, AuthController.getCurrentUser);
 
 /**
  * @swagger

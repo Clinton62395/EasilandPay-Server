@@ -49,6 +49,23 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    country: {
+      type: String,
+      trim: true,
+    },
+    city: {
+      type: String,
+      trim: true,
+    },
+    address: {
+      type: String,
+      trim: true,
+    },
+    profileImage: {
+      url: String,
+      public_id: String,
+    },
+
     phoneNumber: {
       type: String,
       trim: true,
@@ -56,20 +73,16 @@ const userSchema = new mongoose.Schema(
     },
 
     // Company info (for company role)
+
     companyInfo: {
       name: String,
       registrationNumber: String,
-      address: String,
-      employeeCount: Number,
+      completed: { type: Boolean, default: false },
     },
 
-    // Realtor info
     realtorInfo: {
       licenseNumber: String,
-      paystackSubaccountCode: String,
-      bio: String,
-      profileImage: String,
-      rating: { type: Number, default: 0 },
+      completed: { type: Boolean, default: false },
     },
 
     // Account status

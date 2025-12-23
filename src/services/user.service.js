@@ -9,8 +9,6 @@ import { transporter } from "../configs/nodemailer.js";
 import fs from "fs";
 import path from "path";
 
-
-
 dotenv.config();
 
 class UserService {
@@ -177,7 +175,7 @@ class UserService {
     delete userObject.refreshToken;
 
     return {
-      data: userObject,
+      user: userObject,
       token,
       role: userObject.role,
       refreshToken,
@@ -479,7 +477,7 @@ YourApp Team`;
   // GET USER BY ID
   // ============================================
 
-  getUserById = async (userId) => {
+  getCurrentUser = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       throw new AppError("Invalid user ID", 400);
     }
@@ -498,20 +496,41 @@ YourApp Team`;
   // ============================================
 
   updateProfile = async (userId, updates) => {
-    const forbiddenFields = [
-      "password",
-      "email",
-      "role",
-      "createdAt",
-      "refreshToken",
+    // 1. Champs strictement autorisés à être modifiés
+    const allowedFields = [
+      "firstName",
+      "lastName",
+      "phoneNumber",
+      "address",
+      "city",
+      "country",
+      "profileImage",
     ];
-    forbiddenFields.forEach((field) => delete updates[field]);
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { ...updates },
-      { new: true, runValidators: true }
-    );
+    const filteredUpdates = {};
+
+    allowedFields.forEach((field) => {
+      if (updates[field] !== undefined) {
+        filteredUpdates[field] = updates[field];
+      }
+    });
+
+    // 2. Sécurité : validation structure profileImage
+    if (filteredUpdates.profileImage) {
+      const { url, public_id } = filteredUpdates.profileImage;
+
+      if (typeof url !== "string" || typeof public_id !== "string") {
+        throw new AppError("Invalid profile image format", 400);
+      }
+      console.log("user profile data==>", filteredUpdates);
+    }
+
+    // 3. Mise à jour utilisateur
+    const user = await User.findByIdAndUpdate(userId, filteredUpdates, {
+      new: true,
+
+      runValidators: true,
+    });
 
     if (!user) {
       throw new AppError("User not found", 404);

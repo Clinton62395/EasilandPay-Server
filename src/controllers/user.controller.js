@@ -16,7 +16,7 @@ class AuthController {
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      data: result,
+      user: result,
     });
   });
 
@@ -156,11 +156,11 @@ class AuthController {
   // GET CURRENT USER
   // ============================================
   getCurrentUser = catchAsynch(async (req, res, next) => {
-    const user = await userService.getUserById(req.user.userId);
+    const user = await userService.getCurrentUser(req.user.userId);
 
     res.status(200).json({
       success: true,
-      data: { user },
+      user: user,
     });
   });
 

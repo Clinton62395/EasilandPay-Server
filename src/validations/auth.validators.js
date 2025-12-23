@@ -105,123 +105,98 @@ export const changePasswordValidation = [
 // ============================================
 // UPDATE PROFILE VALIDATION
 // ============================================
+
+// ============================================
+// UPDATE BANK DETAILS VALIDATION
+// ============================================
 export const updateProfileValidation = [
+  // Informations personnelles
   body("firstName")
-    .optional()
     .trim()
+    .notEmpty()
+    .withMessage("Le prénom est requis")
     .isLength({ min: 2, max: 50 })
-    .withMessage("First name must be between 2 and 50 characters"),
+    .withMessage("Le prénom doit contenir entre 2 et 50 caractères")
+    .matches(/^[a-zA-ZÀ-ÿ\s\-']+$/)
+    .withMessage("Le prénom ne doit contenir que des lettres"),
 
   body("lastName")
-    .optional()
     .trim()
+    .notEmpty()
+    .withMessage("Le nom est requis")
     .isLength({ min: 2, max: 50 })
-    .withMessage("Last name must be between 2 and 50 characters"),
+    .withMessage("Le nom doit contenir entre 2 et 50 caractères")
+    .matches(/^[a-zA-ZÀ-ÿ\s\-']+$/)
+    .withMessage("Le nom ne doit contenir que des lettres"),
 
+  // Téléphone
   body("phoneNumber")
-    .optional()
     .trim()
-    .matches(/^[\d\s\+\-\(\)]+$/)
-    .withMessage("Please provide a valid phone number")
-    .isLength({ min: 10, max: 20 })
-    .withMessage("Phone number must be between 10 and 20 characters"),
+    .notEmpty()
+    .withMessage("Le numéro de téléphone est requis")
+    .matches(/^[0-9+\s()-]+$/)
+    .withMessage("Format de téléphone invalide")
+    .isLength({ min: 10 })
+    .withMessage("Le numéro de téléphone doit contenir au moins 10 caractères"),
 
-  body("profilePicture")
-    .optional()
-    .trim()
-    .isURL()
-    .withMessage("Please provide a valid profile picture URL"),
-
+  // Adresse (optionnel)
   body("address")
     .optional()
     .trim()
-    .isLength({ max: 500 })
-    .withMessage("Address cannot exceed 500 characters"),
+    .isLength({ max: 200 })
+    .withMessage("L'adresse ne peut pas dépasser 200 caractères"),
 
   body("city")
     .optional()
     .trim()
     .isLength({ max: 100 })
-    .withMessage("City cannot exceed 100 characters"),
-
-  body("state")
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage("State cannot exceed 100 characters"),
+    .withMessage("La ville ne peut pas dépasser 100 caractères"),
 
   body("country")
     .optional()
     .trim()
     .isLength({ max: 100 })
-    .withMessage("Country cannot exceed 100 characters"),
+    .withMessage("Le pays ne peut pas dépasser 100 caractères"),
 
-  body("companyInfo.companyName")
+  // Validation conditionnelle pour les mots de passe
+  body().custom((value, { req }) => {
+    // Si un nouveau mot de passe est fourni, vérifier le mot de passe actuel
+    if (req.body.newPassword && req.body.newPassword.trim() !== "") {
+      if (!req.body.currentPassword || req.body.currentPassword.trim() === "") {
+        throw new Error(
+          "Le mot de passe actuel est requis pour changer le mot de passe"
+        );
+      }
+    }
+    return true;
+  }),
+
+  // Nouveau mot de passe (optionnel mais avec validation si fourni)
+  body("newPassword")
     .optional()
     .trim()
-    .isLength({ min: 2, max: 200 })
-    .withMessage("Company name must be between 2 and 200 characters"),
+    .isLength({ min: 8 })
+    .withMessage("Le nouveau mot de passe doit contenir au moins 8 caractères")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)
+    .withMessage(
+      "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial"
+    ),
 
-  body("companyInfo.registrationNumber")
+  // Confirmation du mot de passe (conditionnel)
+  body("confirmPassword")
     .optional()
     .trim()
-    .isLength({ max: 100 })
-    .withMessage("Registration number cannot exceed 100 characters"),
-
-  body("companyInfo.taxId")
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage("Tax ID cannot exceed 100 characters"),
-
-  body("companyInfo.address")
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage("Company address cannot exceed 500 characters"),
-
-  body("companyInfo.website")
-    .optional()
-    .trim()
-    .isURL()
-    .withMessage("Please provide a valid website URL"),
-
-  body("realtorInfo.licenseNumber")
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage("License number cannot exceed 100 characters"),
-
-  body("realtorInfo.yearsOfExperience")
-    .optional()
-    .isInt({ min: 0, max: 100 })
-    .withMessage("Years of experience must be between 0 and 100"),
-
-  body("realtorInfo.specialization")
-    .optional()
-    .trim()
-    .isLength({ max: 200 })
-    .withMessage("Specialization cannot exceed 200 characters"),
-];
-
-// ============================================
-// UPDATE BANK DETAILS VALIDATION
-// ============================================
-export const updateBankDetailsValidation = [
-  body("accountNumber")
-    .trim()
-    .notEmpty()
-    .withMessage("Account number is required")
-    .matches(/^\d+$/)
-    .withMessage("Account number must contain only digits")
-    .isLength({ min: 10, max: 10 })
-    .withMessage("Account number must be 10 digits"),
-
-  body("bankCode").trim().notEmpty().withMessage("Bank code is required"),
-
-  body("bankName").trim().notEmpty().withMessage("Bank name is required"),
-
-  body("accountName").trim().notEmpty().withMessage("Account name is required"),
+    .custom((value, { req }) => {
+      if (req.body.newPassword && req.body.newPassword.trim() !== "") {
+        if (!value || value.trim() === "") {
+          throw new Error("La confirmation du mot de passe est requise");
+        }
+        if (value !== req.body.newPassword) {
+          throw new Error("Les mots de passe ne correspondent pas");
+        }
+      }
+      return true;
+    }),
 ];
 
 // ============================================
