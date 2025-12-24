@@ -102,7 +102,14 @@ class UserService {
       if (rolesWithWallet.includes(role)) {
         await Wallet.findOneAndUpdate(
           { user: newUser._id },
-          { $setOnInsert: { balance: 0, escrowBalance: 0, currency: "NGN" } },
+          {
+            $setOnInsert: {
+              balance: 0,
+              currency: "NGN",
+              totalWithdrawn: 0,
+              totalDeposited: 0,
+            },
+          },
           { upsert: true, new: true, session }
         );
       }

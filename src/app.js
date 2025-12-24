@@ -8,7 +8,6 @@ import connectDB from "./configs/database.configs.js";
 import compression from "compression";
 import { logger } from "./utils/logger.js";
 import mongoSanitize from "express-mongo-sanitize";
-import authEditors from "./routes/editors.routes.js";
 import authPlan from "./routes/plan.routes.js";
 import authWallet from "./routes/wallet.routes.js";
 import authTransaction from "./routes/transaction.routes.js";
@@ -52,7 +51,6 @@ app.use("/wallet", authWallet);
 app.use("/realtor", authRealtors);
 
 // Routes for advanced authentication or editor operations (permissions, roles, etc.)
-app.use("/api/auth", authEditors);
 
 // Routes for  commission  operations
 app.use("/api/auth", authCommission);
