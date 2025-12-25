@@ -549,6 +549,16 @@ YourApp Team`;
   // ============================================
   // GET ALL USERS
   // ============================================
+  // ============================================
+  // GET user by Id
+  // ============================================
+
+  getUserById = async (userId) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new AppError("Invalid user ID", 400);
+    }
+    return User.findById(userId);
+  };
 
   getAllUsers = async (filters = {}, page = 1, limit = 20) => {
     const { role, isActive, search } = filters;

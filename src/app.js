@@ -62,7 +62,7 @@ app.use("/api/plan", authPlan);
 app.use("/transaction", authTransaction);
 
 //
-app.use("/transaction", authPayment);
+app.use("/payments",   authPayment);
 
 // Routes for google registering management
 app.use("/api/", authGoogle);

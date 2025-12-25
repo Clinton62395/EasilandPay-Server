@@ -94,12 +94,7 @@ router.post(
  *                     transactionId:
  *                       type: string
  */
-router.post(
-  "/initialize",
-  authenticate,
-  authorize(["buyer", "admin"]),
-  paymentController.initializePayment
-);
+router.post("/initialize", authenticate, paymentController.initializePayment);
 
 /**
  * @swagger

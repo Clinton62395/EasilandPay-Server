@@ -1,34 +1,47 @@
 // payment.controller.js - VERSION SIMPLIFIÉE
 
 import Transaction from "../models/Transaction.moddels.js";
-import flutterwaveService from "../services/flutterwave.service.js";
+import flutterwaveService from "../services/payment.service.js";
 import transactionService from "../services/fwt.transaction.service.js";
+import userService from "../services/user.service.js";
 
 class PaymentController {
   // 1. TOP-UP - Simple et clair
   initializePayment = async (req, res) => {
-    const { amountInNaira, userId } = req.body;
+    try {
+      const { amount, userId } = req.body;
+      
+      const amountInNaira = parseFloat(amount);
 
-    // → Créer transaction PENDING via service
-    const transaction = await transactionService.createPendingForFlutterwave(
-      userId,
-      "CREDIT",
-      amountInNaira,
-      { description: `Top-up ${amountInNaira} NGN` }
-    );
+      // Récupérer l'utilisateur
+      const user = await userService.getUserById(userId);
 
-    // → Générer lien Flutterwave
-    const paymentData = await flutterwaveService.initializePayment({
-      amountInNaira,
-      email: user.email,
-      reference: transaction.reference, // Donner ta référence
-    });
+      // Créer transaction PENDING
+      const transaction = await transactionService.createPendingForFlutterwave(
+        userId,
+        "CREDIT",
+        amountInNaira,
+        { description: `Top-up ${amountInNaira} NGN` }
+      );
 
-    // → Sauver la référence Flutterwave
-    transaction.metadata.gatewayReference = paymentData.tx_ref;
-    await transaction.save();
+      // Initialiser le paiement
+      const paymentData = await flutterwaveService.initializePayment({
+        amountInNaira,
+        email: user.email,
+        reference: transaction.reference,
+        meta: { transactionId: transaction._id, userId },
+      });
 
-    res.json({ paymentLink: paymentData.paymentLink });
+      // Sauver la référence Flutterwave
+      transaction.metadata.gatewayReference = paymentData.tx_ref;
+      await transaction.save();
+
+      // Retour frontend
+      res.json({ paymentLink: paymentData.paymentLink });
+    } catch (err) {
+      console.error("initializePayment error:", err);
+      res.status(500).json({ message: "Failed to initialize payment" });
+    }
   };
 
   // 2. WEBHOOK - Simple et clair

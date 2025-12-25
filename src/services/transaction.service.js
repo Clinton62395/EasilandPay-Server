@@ -19,6 +19,7 @@ class TransactionService {
         transactionData;
 
       // 1. Validate amount
+      
       if (!Number.isInteger(amountInKobo) || amountInKobo <= 0) {
         throw new AppError(
           "Invalid amount. Must be a positive integer (kobo)",
