@@ -316,7 +316,7 @@ router.post(
 
 /**
  * @swagger
- * /wallet/admin/user/{userId}:
+ * /wallet/admin/user/{user}:
  *   get:
  *     summary: Get user's wallet (Admin)
  *     description: Retrieve wallet details for any user (admin only)
@@ -325,7 +325,7 @@ router.post(
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: userId
+ *         name: user
  *         required: true
  *         schema:
  *           type: string
@@ -341,7 +341,7 @@ router.post(
  *         description: Wallet not found
  */
 router.get(
-  "/admin/user/:userId",
+  "/admin/user/:user",
   authenticate,
   authorize("admin"),
   WalletController.releaseEscrow
@@ -358,7 +358,7 @@ router.get(
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: userId
+ *         name: user
  *         schema:
  *           type: string
  *         description: Filter by user ID
@@ -366,7 +366,7 @@ router.get(
  *         name: type
  *         schema:
  *           type: string
- *           enum: [CREDIT, DEBIT, ESCROW, COMMISSION, REFUND]
+ *           enum: [WALLET_DEPOSIT, WALLET_WITHDRAWAL, ESCROW_DEPOSIT, COMMISSION_PAYMENT, ESCROW_REFUND]
  *         description: Filter by transaction type
  *       - in: query
  *         name: status

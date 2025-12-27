@@ -14,8 +14,8 @@ class PaymentController {
       const { amount } = req.body;
       const userId = req.user.user || req.user.userId;
 
-      if (!amount) {
-        console.log("⚠️ Amount missing in request body");
+      if (!amount || !userId) {
+        console.log("⚠️ Amount or userId  are missing in request ");
         return next(new AppError("Amount is required", 400));
       }
       // 🔹 Charger l'utilisateur
@@ -41,7 +41,7 @@ class PaymentController {
           amountInNaira,
           email: user.email,
           reference: transaction.reference,
-          meta: { transactionId: transaction._id, user: userId },
+          meta: { transactionId: transaction._id, user: uid },
         }
       );
 
@@ -87,11 +87,11 @@ class PaymentController {
 
   // 3. RETRAIT - Simple et clair
   initiateWithdrawal = async (req, res) => {
-    const { userId, amountInNaira, account_bank, account_number } = req.body;
+    const { user, amountInNaira, account_bank, account_number } = req.body;
 
     // → Service gère débit + création transaction
     const transaction = await transactionService.processWithdrawal(
-      userId,
+      user,
       amountInNaira,
       { account_bank, account_number }
     );

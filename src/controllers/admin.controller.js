@@ -58,7 +58,8 @@ export const refreshToken = async (req, res, next) => {
 // ============================================
 export const logout = async (req, res, next) => {
   try {
-    const result = await userService.logout(req.user.userId);
+    const uid = req.user.user || req.user.userId;
+    const result = await userService.logout(uid);
 
     res.status(200).json({
       status: "success",
@@ -111,8 +112,9 @@ export const resetPassword = async (req, res, next) => {
 export const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
+    const uid = req.user.user || req.user.userId;
     const result = await userService.changePassword(
-      req.user.userId,
+      uid,
       currentPassword,
       newPassword
     );
@@ -131,7 +133,8 @@ export const changePassword = async (req, res, next) => {
 // ============================================
 export const getCurrentUser = async (req, res, next) => {
   try {
-    const user = await userService.getUserById(req.user.userId);
+    const uid = req.user.user || req.user.userId;
+    const user = await userService.getUserById(uid);
 
     res.status(200).json({
       status: "success",
@@ -164,7 +167,8 @@ export const getUserById = async (req, res, next) => {
 // ============================================
 export const updateProfile = async (req, res, next) => {
   try {
-    const user = await userService.updateProfile(req.user.userId, req.body);
+    const uid = req.user.user || req.user.userId;
+    const user = await userService.updateProfile(uid, req.body);
 
     res.status(200).json({
       status: "success",

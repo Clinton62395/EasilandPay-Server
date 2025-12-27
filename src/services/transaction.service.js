@@ -14,6 +14,7 @@ class TransactionService {
 
     try {
       const {
+        user,
         userId,
         type,
         amountInKobo,
@@ -25,6 +26,8 @@ class TransactionService {
         milestoneIndex,
       } = transactionData;
 
+      const uid = user || userId;
+
       // 1. Validate amount
       if (!Number.isInteger(amountInKobo) || amountInKobo <= 0) {
         throw new AppError(
@@ -34,7 +37,7 @@ class TransactionService {
       }
 
       // 2. Generate reference
-      const reference = Transaction.generateReference(type, userId);
+      const reference = Transaction.generateReference(type, uid);
 
       if (await Transaction.referenceExists(reference)) {
         throw new AppError("Duplicate transaction reference", 409);
@@ -52,7 +55,7 @@ class TransactionService {
       let newBalance = null;
 
       if (walletRelatedTypes.includes(type)) {
-        wallet = await Wallet.findOne({ user: userId }).session(session);
+        wallet = await Wallet.findOne({ user: uid }).session(session);
         if (!wallet) throw new AppError("Wallet not found", 404);
       }
 
@@ -81,7 +84,7 @@ class TransactionService {
       const [transaction] = await Transaction.create(
         [
           {
-            user: userId,
+            user: uid,
             type,
             amountInKobo,
             reference,
@@ -227,9 +230,9 @@ class TransactionService {
   // GET USER TRANSACTIONS
   // ============================================
 
-  async getUserTransactions(userId, filters = {}, page = 1, limit = 20) {
+  async getUserTransactions(user, filters = {}, page = 1, limit = 20) {
     const { type, status, startDate, endDate } = filters;
-    const query = { user: userId };
+    const query = { user };
 
     if (type) query.type = type;
     if (status) query.status = status;
@@ -316,11 +319,11 @@ class TransactionService {
   // GET USER TRANSACTION SUMMARY
   // ============================================
 
-  async getUserTransactionSummary(userId) {
+  async getUserTransactionSummary(user) {
     const summary = await Transaction.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(userId),
+          user: new mongoose.Types.ObjectId(user),
           status: "SUCCESS",
         },
       },
@@ -333,7 +336,7 @@ class TransactionService {
       },
     ]);
 
-    const wallet = await Wallet.findOne({ user: userId });
+    const wallet = await Wallet.findOne({ user });
 
     return {
       currentBalance: wallet ? wallet.balanceInKobo : 0,
@@ -410,9 +413,9 @@ class TransactionService {
   // CREDIT WALLET (FUNDING)
   // ============================================
 
-  async creditWallet(userId, amountInKobo, description, metadata = {}) {
+  async creditWallet(user, amountInKobo, description, metadata = {}) {
     return await this.createTransaction({
-      userId,
+      user,
       type: "WALLET_DEPOSIT",
       amountInKobo,
       description: description || "Wallet funding",
@@ -424,9 +427,9 @@ class TransactionService {
   // DEBIT WALLET (WITHDRAWAL/PAYMENT)
   // ============================================
 
-  async debitWallet(userId, amountInKobo, description, metadata = {}) {
+  async debitWallet(user, amountInKobo, description, metadata = {}) {
     return await this.createTransaction({
-      userId,
+      user,
       type: "WALLET_WITHDRAWAL",
       amountInKobo,
       description: description || "Wallet debit",
@@ -445,7 +448,7 @@ class TransactionService {
     metadata = {}
   ) {
     return await this.createTransaction({
-      userId: realtorId,
+      user: realtorId,
       type: "COMMISSION_PAYMENT",
       amountInKobo,
       description: "Commission payment",
@@ -461,13 +464,13 @@ class TransactionService {
   // ============================================
 
   async refundTransaction(
-    userId,
+    user,
     amountInKobo,
     originalTransactionId,
     metadata = {}
   ) {
     return await this.createTransaction({
-      userId,
+      user,
       type: "ESCROW_REFUND",
       amountInKobo,
       description: "Refund",

@@ -12,39 +12,34 @@ class TransactionService {
   // ====================================
   // 1. CRÉER UNE TRANSACTION PENDING (pour Flutterwave)
   // ====================================
-  async createPendingForFlutterwave(
-    userId,
-    type,
-    amountInNaira,
-    metadata = {}
-  ) {
-    // Convertir Naira → Kobo (votre système)
+  async createPendingForFlutterwave(user, type, amountInNaira, metadata = {}) {
+    const uid = user;
+
+    // Convertir Naira → Kobo
     const amountInKobo = Math.round(amountInNaira * 100);
 
-    // Valider le minimum
     if (amountInKobo < 100) {
       throw new Error("Minimum amount is 1 NGN (100 kobo)");
     }
 
-    // Générer référence unique
-    const reference = Transaction.generateReference(type, userId);
+    // Référence UNIQUE partagée avec Flutterwave
+    const reference = Transaction.generateReference(type, uid);
 
-    // Vérifier si référence existe déjà
     const exists = await Transaction.referenceExists(reference);
     if (exists) {
       throw new Error("Duplicate transaction reference");
     }
 
-    // Créer la transaction PENDING
     const transaction = await Transaction.create({
-      user: userId,
-      type, // expected values: "WALLET_DEPOSIT" (top-up) or "WALLET_WITHDRAWAL" (withdrawal)
+      user: uid,
+      type,
       amountInKobo,
-      reference,
-      status: "PENDING", // IMPORTANT: pas de wallet update ici
+      reference, // 🔑 SOURCE UNIQUE
+      status: "PENDING",
       description: metadata.description || `${type} via Flutterwave`,
       metadata: {
         paymentGateway: "FLUTTERWAVE",
+        tx_ref: reference, // 🔑 OPTIONNEL mais explicite
         initiatedAt: new Date(),
         ...metadata,
       },
@@ -61,23 +56,20 @@ class TransactionService {
     session.startTransaction();
 
     try {
-      // 1. Charger la transaction
       const transaction = await Transaction.findById(transactionId).session(
         session
       );
       if (!transaction) throw new Error("Transaction not found");
 
-      // 2. Idempotence
       if (transaction.status !== "PENDING") {
         return transaction;
       }
 
-      // 3. VALIDATIONS FLUTTERWAVE (OBLIGATOIRE)
       if (flutterwaveData.status !== "successful") {
         throw new Error("Payment not successful");
       }
 
-      if (flutterwaveData.tx_ref !== transaction.metadata.tx_ref) {
+      if (flutterwaveData.tx_ref !== transaction.reference) {
         throw new Error("tx_ref mismatch");
       }
 
@@ -85,34 +77,43 @@ class TransactionService {
         throw new Error("Invalid currency");
       }
 
-      if (flutterwaveData.amount * 100 !== transaction.amountInKobo) {
+      const flutterAmountInKobo = Math.round(
+        Number(flutterwaveData.amount) * 100
+      );
+
+      if (flutterAmountInKobo !== transaction.amountInKobo) {
         throw new Error("Amount mismatch");
       }
 
-      // 4. Charger le wallet
+      const duplicate = await Transaction.findOne({
+        "metadata.gatewayReference": flutterwaveData.id,
+        status: "SUCCESS",
+      }).session(session);
+
+      if (duplicate) {
+        throw new Error("Flutterwave transaction already processed");
+      }
+
       const wallet = await Wallet.findOne({ user: transaction.user }).session(
         session
       );
       if (!wallet) throw new Error("Wallet not found");
 
-      // 5. Crédit wallet (WALLET_DEPOSIT uniquement)
       if (transaction.type === "WALLET_DEPOSIT") {
         wallet.balance += transaction.amountInKobo;
         wallet.totalDeposited += transaction.amountInKobo;
         wallet.lastTransactionAt = new Date();
 
         transaction.balanceAfter = wallet.balance;
+        await wallet.save({ session });
       }
 
-      // 6. Mettre à jour la transaction
       transaction.status = "SUCCESS";
       transaction.metadata.paymentGateway = "FLUTTERWAVE";
       transaction.metadata.gatewayReference = flutterwaveData.id;
       transaction.metadata.gatewayResponse = flutterwaveData;
       transaction.metadata.completedAt = new Date();
 
-      // 7. Sauvegarder
-      await wallet.save({ session });
       await transaction.save({ session });
       await session.commitTransaction();
 
@@ -128,7 +129,8 @@ class TransactionService {
   // ====================================
   // 3. TRAITER UN RETRAIT (débit immédiat + pending)
   // ====================================
-  async processWithdrawal(userId, amountInNaira, bankDetails) {
+  async processWithdrawal(user, amountInNaira, bankDetails) {
+    const uid = user;
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -140,7 +142,7 @@ class TransactionService {
       }
 
       // 2. Charger le wallet
-      const wallet = await Wallet.findOne({ user: userId }).session(session);
+      const wallet = await Wallet.findOne({ user: uid }).session(session);
       if (!wallet) throw new Error("Wallet not found");
 
       if (wallet.balance < amountInKobo) {
@@ -154,15 +156,12 @@ class TransactionService {
       wallet.lastTransactionAt = new Date();
 
       // 4. Créer la transaction
-      const reference = Transaction.generateReference(
-        "WALLET_WITHDRAWAL",
-        userId
-      );
+      const reference = Transaction.generateReference("WALLET_WITHDRAWAL", uid);
 
       const [transaction] = await Transaction.create(
         [
           {
-            user: userId,
+            user: uid,
             type: "WALLET_WITHDRAWAL",
             amountInKobo,
             reference,

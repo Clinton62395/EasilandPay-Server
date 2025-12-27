@@ -387,7 +387,7 @@ router.get("/:id", authenticate, TransactionController.getTransactionById);
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: userId
+ *         name: user
  *         schema:
  *           type: string
  *         description: Filter by user ID
@@ -395,7 +395,7 @@ router.get("/:id", authenticate, TransactionController.getTransactionById);
  *         name: type
  *         schema:
  *           type: string
- *           enum: [CREDIT, DEBIT, COMMISSION, REFUND]
+ *           enum: [WALLET_DEPOSIT, WALLET_WITHDRAWAL, ESCROW_DEPOSIT, ESCROW_RELEASE_SELLER, ESCROW_RELEASE_REALTOR, ESCROW_REFUND, COMMISSION_PAYMENT, PLATFORM_FEE, PROCESSING_FEE]
  *         description: Filter by transaction type
  *       - in: query
  *         name: status
@@ -535,11 +535,11 @@ router.get(
  *           schema:
  *             type: object
  *             required:
- *               - userId
+ *               - user
  *               - type
  *               - amountInKobo
  *             properties:
- *               userId:
+ *               user:
  *                 type: string
  *                 example: 507f1f77bcf86cd799439011
  *               type:
@@ -699,11 +699,11 @@ router.post(
  *           schema:
  *             type: object
  *             required:
- *               - userId
+ *               - user
  *               - amountInKobo
  *               - originalTransactionId
  *             properties:
- *               userId:
+ *               user:
  *                 type: string
  *                 description: User ID to refund
  *                 example: 507f1f77bcf86cd799439011

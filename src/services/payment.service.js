@@ -21,36 +21,26 @@ class FlutterwaveService {
     console.log("Public Key present:", !!this.publicKey);
   }
 
-  // Générer une référence unique pour Flutterwave
-  generateReference(prefix = "EASILAND") {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000);
-    return `${prefix}_${timestamp}_${random}`;
-  }
-
   // Initialiser un paiement
   async initializeFlutterwavePayment({
     amountInNaira,
     email,
     userId,
-    user,
+    reference,
     currency = "NGN",
     redirectUrl = `${FRONTEND_URL}/payments/verify`,
     meta = {},
   }) {
-    const tx_ref = this.generateReference("FLW");
-
     const amount = parseFloat(amountInNaira);
-    const uid = user || userId;
 
     const payload = {
-      tx_ref,
+      tx_ref: reference,
       amount,
       currency,
       redirect_url: redirectUrl,
       customer: {
         email,
-        name: `User_${uid}`,
+        name: `User_${userId}`,
       },
       customizations: {
         title: "EasilandPay",
@@ -58,7 +48,7 @@ class FlutterwaveService {
       },
       meta: {
         ...meta,
-        user: uid,
+        user: userId,
       },
     };
 
@@ -78,7 +68,7 @@ class FlutterwaveService {
 
     return {
       paymentLink: response.data.data.link,
-      tx_ref,
+      tx_ref: reference,
       status: response.data.status,
     };
   }

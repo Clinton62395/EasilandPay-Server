@@ -105,10 +105,8 @@ export const isOwnerOrAdmin = (req, res, next) => {
   }
 
   // Check if user is owner
-  if (
-    req.user.user !== resourceOwnerId &&
-    req.user.userId !== resourceOwnerId
-  ) {
+  const uid = req.user.user || req.user.userId;
+  if (uid !== resourceOwnerId) {
     return next(
       new AppError("You do not have permission to perform this action", 403)
     );

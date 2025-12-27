@@ -202,7 +202,7 @@ export const updateProfileValidation = [
 // ============================================
 // PARAM VALIDATION (for routes with :id)
 // ============================================
-export const userIdParamValidation = [
+export const userParamValidation = [
   param("id")
     .trim()
     .notEmpty()

@@ -314,9 +314,8 @@ class AuthController {
   // SEND EMAIL VERIFICATION
   // ============================================
   sendEmailVerification = catchAsynch(async (req, res, next) => {
-    const token = await userService.generateEmailVerificationToken(
-      req.user.userId
-    );
+    const uid = req.user.user || req.user.userId;
+    const token = await userService.generateEmailVerificationToken(uid);
 
     // TODO: Send email with verification token
     // await emailService.sendVerificationEmail(req.user.email, token);

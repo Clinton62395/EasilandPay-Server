@@ -57,7 +57,7 @@ router.post("/webhook", paymentController.handleWebhook);
  *             required:
  *               - amountInNaira
  *               - email
- *               - userId
+ *               - user
  *             properties:
  *               amountInNaira:
  *                 type: number
@@ -65,7 +65,7 @@ router.post("/webhook", paymentController.handleWebhook);
  *               email:
  *                 type: string
  *                 example: user@example.com
- *               userId:
+ *               user:
  *                 type: string
  *                 example: 64a1f2c9e4b0f1a23b45c678
  *     responses:

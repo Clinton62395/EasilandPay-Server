@@ -5,7 +5,7 @@ import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import {
   loginValidator,
   registerValidator,
-  userIdParamValidation,
+  userParamValidation,
   refreshTokenValidation,
   forgotPasswordValidation,
   changePasswordValidation,
@@ -608,7 +608,7 @@ router.get(
   "/:id",
   authenticate,
   authorize("admin"),
-  userIdParamValidation,
+  userParamValidation,
   validate,
   AuthController.getUserById
 );
@@ -699,7 +699,7 @@ router.patch(
   "/:id/suspend",
   authenticate,
   authorize("admin"),
-  userIdParamValidation,
+  userParamValidation,
   validate,
   AuthController.suspendUser
 );
@@ -735,7 +735,7 @@ router.patch(
   "/:id/activate",
   authenticate,
   authorize("admin"),
-  userIdParamValidation,
+  userParamValidation,
   validate,
   AuthController.activateUser
 );
@@ -771,7 +771,7 @@ router.delete(
   "/:id",
   authenticate,
   authorize("admin"),
-  userIdParamValidation,
+  userParamValidation,
   validate,
   AuthController.deleteUser
 );

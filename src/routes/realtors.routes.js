@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
-import { userIdParamValidation } from "../validations/auth.validators.js";
+import { userParamValidation } from "../validations/auth.validators.js";
 import AuthController from "../controllers/user.controller.js";
 
 import validate from "../validations/validatorResult.js";
@@ -63,7 +63,7 @@ router.put(
   "/:id/bank-details",
   authenticate,
   authorize("realtor", "admin"),
-  userIdParamValidation,
+  userParamValidation,
   validate,
   AuthController.updateRealtorBankDetails
 );

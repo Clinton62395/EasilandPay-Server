@@ -85,9 +85,9 @@ export const getUserTransactions = async (req, res, next) => {
     const { type, status, startDate, endDate, page, limit } = req.query;
     const filters = { type, status, startDate, endDate };
 
-    const userId = req.user.user || req.user.userId;
+    const uid = req.user.user || req.user.userId;
     const result = await TransactionService.getUserTransactions(
-      userId,
+      uid,
       filters,
       page,
       limit
@@ -259,10 +259,10 @@ export const payCommission = async (req, res, next) => {
 // ============================================
 export const refundTransaction = async (req, res, next) => {
   try {
-    const { userId, amountInKobo, originalTransactionId, metadata } = req.body;
+    const { user, amountInKobo, originalTransactionId, metadata } = req.body;
 
     const transaction = await TransactionService.refundTransaction(
-      userId,
+      user,
       amountInKobo,
       originalTransactionId,
       metadata

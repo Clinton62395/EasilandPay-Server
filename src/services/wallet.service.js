@@ -3,22 +3,22 @@ import Wallet from "../models/Wallet.models.js";
 import { AppError } from "../utils/appError.utils.js";
 
 class WalletService {
-  async getWallet(userId) {
-    const wallet = await Wallet.findOne({ user: userId });
+  async getWallet(user) {
+    const wallet = await Wallet.findOne({ user });
     if (!wallet) throw new AppError("Wallet not found", 404);
     return wallet;
   }
 
-  async fundWallet(userId, amount, reference) {
-    const wallet = await this.getWallet(userId);
+  async fundWallet(user, amount, reference) {
+    const wallet = await this.getWallet(user);
 
     wallet.balance += amount;
     await wallet.save();
 
     await Transaction.create({
-      user: userId,
+      user,
       amount,
-      type: "CREDIT",
+      type: "WALLET_DEPOSIT",
       status: "SUCCESS",
       reference,
       description: "Wallet funded",
@@ -27,8 +27,8 @@ class WalletService {
     return wallet;
   }
 
-  async debitWallet(userId, amount, description = "Payment") {
-    const wallet = await this.getWallet(userId);
+  async debitWallet(user, amount, description = "Payment") {
+    const wallet = await this.getWallet(user);
 
     if (wallet.balance < amount) {
       throw new AppError("Insufficient balance", 400);
@@ -38,9 +38,9 @@ class WalletService {
     await wallet.save();
 
     await Transaction.create({
-      user: userId,
+      user,
       amount,
-      type: "DEBIT",
+      type: "WALLET_WITHDRAWAL",
       status: "SUCCESS",
       description,
     });
@@ -48,8 +48,8 @@ class WalletService {
     return wallet;
   }
 
-  async holdInEscrow(userId, amount, propertyId) {
-    const wallet = await this.getWallet(userId);
+  async holdInEscrow(user, amount, propertyId) {
+    const wallet = await this.getWallet(user);
 
     if (wallet.balance < amount) {
       throw new AppError("Insufficient wallet balance", 400);
@@ -60,7 +60,7 @@ class WalletService {
     await wallet.save();
 
     await Transaction.create({
-      user: userId,
+      user,
       amount,
       type: "ESCROW",
       status: "HOLD",
