@@ -59,7 +59,8 @@ class AuthController {
   // LOGOUT
   // ============================================
   logout = catchAsynch(async (req, res, next) => {
-    const result = await userService.logout(req.user.userId);
+    const uid = req.user.user || req.user.userId;
+    const result = await userService.logout(uid);
 
     res.status(200).json({
       success: true,
@@ -140,8 +141,9 @@ class AuthController {
       throw new AppError("Current and new password are required", 400);
     }
 
+    const uid = req.user.user || req.user.userId;
     const result = await userService.changePassword(
-      req.user.userId,
+      uid,
       currentPassword,
       newPassword
     );
@@ -156,7 +158,8 @@ class AuthController {
   // GET CURRENT USER
   // ============================================
   getCurrentUser = catchAsynch(async (req, res, next) => {
-    const user = await userService.getCurrentUser(req.user.userId);
+    const uid = req.user.user || req.user.userId;
+    const user = await userService.getCurrentUser(uid);
 
     res.status(200).json({
       success: true,
@@ -168,7 +171,8 @@ class AuthController {
   // UPDATE PROFILE
   // ============================================
   updateProfile = catchAsynch(async (req, res, next) => {
-    const user = await userService.updateProfile(req.user.userId, req.body);
+    const uid = req.user.user || req.user.userId;
+    const user = await userService.updateProfile(uid, req.body);
 
     res.status(200).json({
       success: true,

@@ -268,9 +268,9 @@ export const initiateDisputeValidator = [
     .isMongoId()
     .withMessage("Invalid escrow ID format"),
 
-  body("userId")
+  body("user")
     .notEmpty()
-    .withMessage("User ID is required")
+    .withMessage("User is required")
     .isMongoId()
     .withMessage("Invalid user ID format")
     .custom(async (value) => {

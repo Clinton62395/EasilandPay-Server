@@ -37,8 +37,10 @@ export const authenticate = catchAsynch(async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 4. Attach user info to request
+    // Keep `userId` for backward compatibility and add `user` for uniformity
     req.user = {
       userId: decoded.userId,
+      user: decoded.userId,
       role: decoded.role,
     };
 
@@ -103,7 +105,10 @@ export const isOwnerOrAdmin = (req, res, next) => {
   }
 
   // Check if user is owner
-  if (req.user.userId !== resourceOwnerId) {
+  if (
+    req.user.user !== resourceOwnerId &&
+    req.user.userId !== resourceOwnerId
+  ) {
     return next(
       new AppError("You do not have permission to perform this action", 403)
     );

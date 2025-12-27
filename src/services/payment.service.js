@@ -33,6 +33,7 @@ class FlutterwaveService {
     amountInNaira,
     email,
     userId,
+    user,
     currency = "NGN",
     redirectUrl = `${FRONTEND_URL}/payments/verify`,
     meta = {},
@@ -40,6 +41,7 @@ class FlutterwaveService {
     const tx_ref = this.generateReference("FLW");
 
     const amount = parseFloat(amountInNaira);
+    const uid = user || userId;
 
     const payload = {
       tx_ref,
@@ -48,7 +50,7 @@ class FlutterwaveService {
       redirect_url: redirectUrl,
       customer: {
         email,
-        name: `User_${userId}`,
+        name: `User_${uid}`,
       },
       customizations: {
         title: "EasilandPay",
@@ -56,7 +58,7 @@ class FlutterwaveService {
       },
       meta: {
         ...meta,
-        userId,
+        user: uid,
       },
     };
 

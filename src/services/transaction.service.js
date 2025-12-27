@@ -268,10 +268,10 @@ class TransactionService {
   // ============================================
 
   async getAllTransactions(filters = {}, page = 1, limit = 20) {
-    const { userId, type, status, startDate, endDate, search } = filters;
+    const { user, type, status, startDate, endDate, search } = filters;
     const query = {};
 
-    if (userId) query.user = userId;
+    if (user) query.user = user;
     if (type) query.type = type;
     if (status) query.status = status;
 

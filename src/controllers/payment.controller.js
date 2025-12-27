@@ -5,22 +5,23 @@ import flutterwaveService from "../services/payment.service.js";
 import transactionService from "../services/fwt.transaction.service.js";
 import userService from "../services/user.service.js";
 import User from "../models/Auth.models.js";
+import { AppError } from "../utils/appError.utils.js";
 
 class PaymentController {
-  initializePayment = async (req, res) => {
+  initializePayment = async (req, res, next) => {
     console.log("🚀 initializePayment called", req.body);
     try {
       const { amount } = req.body;
-      const userId = req.user.userId;
+      const userId = req.user.user || req.user.userId;
 
       if (!amount) {
         console.log("⚠️ Amount missing in request body");
-        return res.status(400).json({ message: "Amount is required" });
+        return next(new AppError("Amount is required", 400));
       }
       // 🔹 Charger l'utilisateur
       const user = await User.findById(userId).select("email fullName");
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return next(new AppError("User not found", 404));
       }
       console.log("amout from body", req.body);
 
@@ -40,7 +41,7 @@ class PaymentController {
           amountInNaira,
           email: user.email,
           reference: transaction.reference,
-          meta: { transactionId: transaction._id, userId },
+          meta: { transactionId: transaction._id, user: userId },
         }
       );
 
@@ -112,29 +113,23 @@ class PaymentController {
   };
 
   // 4. VÉRIFICATION MANUELLE - Pour le frontend
-  verifyPayment = async (req, res) => {
+  verifyPayment = async (req, res, next) => {
     try {
       const { tx_ref } = req.params;
 
       console.log(`🔍 Vérification de la transaction: ${tx_ref}`);
 
       if (!tx_ref) {
-        return res.status(400).json({
-          success: false,
-          message: "Référence de transaction manquante",
-        });
+        return next(new AppError("Référence de transaction manquante", 400));
       }
 
       // 1. Trouver la transaction par ta référence interne
       const transaction = await Transaction.findOne({
         "metadata.tx_ref": tx_ref,
-      }).populate("userId", "email");
+      }).populate("user", "email");
 
       if (!transaction) {
-        return res.status(404).json({
-          success: false,
-          message: "Transaction non trouvée",
-        });
+        return next(new AppError("Transaction non trouvée", 404));
       }
 
       // 2. Si transaction déjà terminée, retourner direct

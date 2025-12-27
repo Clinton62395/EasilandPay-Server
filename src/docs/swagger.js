@@ -522,14 +522,14 @@ const swaggerOptions = {
 
         PaymentInitializeRequest: {
           type: "object",
-          required: ["amountInNaira", "userId"],
+          required: ["amountInNaira", "user"],
           properties: {
             amountInNaira: {
               type: "number",
               example: 5000,
               description: "Amount in Nigerian Naira",
             },
-            userId: {
+            user: {
               type: "string",
               example: "64a1b2c3d4e5f67890123456",
             },
@@ -587,7 +587,7 @@ const swaggerOptions = {
               type: "string",
               example: "John Doe",
             },
-            userId: {
+            user: {
               type: "string",
               example: "64a1b2c3d4e5f67890123456",
             },
@@ -610,10 +610,20 @@ const swaggerOptions = {
           type: "object",
           properties: {
             _id: { type: "string" },
-            userId: { type: "string" },
+            user: { type: "string" },
             type: {
               type: "string",
-              enum: ["CREDIT", "DEBIT", "COMMISSION", "REFUND"],
+              enum: [
+                "WALLET_DEPOSIT",
+                "WALLET_WITHDRAWAL",
+                "ESCROW_DEPOSIT",
+                "ESCROW_RELEASE_SELLER",
+                "ESCROW_RELEASE_REALTOR",
+                "ESCROW_REFUND",
+                "COMMISSION_PAYMENT",
+                "PLATFORM_FEE",
+                "PROCESSING_FEE",
+              ],
             },
             amountInKobo: { type: "number" },
             reference: { type: "string" },

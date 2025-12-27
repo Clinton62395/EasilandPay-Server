@@ -85,8 +85,9 @@ export const getUserTransactions = async (req, res, next) => {
     const { type, status, startDate, endDate, page, limit } = req.query;
     const filters = { type, status, startDate, endDate };
 
+    const userId = req.user.user || req.user.userId;
     const result = await TransactionService.getUserTransactions(
-      req.user.userId,
+      userId,
       filters,
       page,
       limit
@@ -106,9 +107,25 @@ export const getUserTransactions = async (req, res, next) => {
 // ============================================
 export const getAllTransactions = async (req, res, next) => {
   try {
-    const { userId, type, status, startDate, endDate, search, page, limit } =
-      req.query;
-    const filters = { userId, type, status, startDate, endDate, search };
+    const {
+      user,
+      userId,
+      type,
+      status,
+      startDate,
+      endDate,
+      search,
+      page,
+      limit,
+    } = req.query;
+    const filters = {
+      user: user || userId,
+      type,
+      status,
+      startDate,
+      endDate,
+      search,
+    };
 
     const result = await TransactionService.getAllTransactions(
       filters,
@@ -130,9 +147,8 @@ export const getAllTransactions = async (req, res, next) => {
 // ============================================
 export const getUserTransactionSummary = async (req, res, next) => {
   try {
-    const summary = await TransactionService.getUserTransactionSummary(
-      req.user.userId
-    );
+    const uid = req.user.user || req.user.userId;
+    const summary = await TransactionService.getUserTransactionSummary(uid);
 
     res.status(200).json({
       status: "success",
@@ -170,8 +186,9 @@ export const creditWallet = async (req, res, next) => {
   try {
     const { amountInKobo, description, metadata } = req.body;
 
+    const uid = req.user.user || req.user.userId;
     const transaction = await TransactionService.creditWallet(
-      req.user.userId,
+      uid,
       amountInKobo,
       description,
       metadata
@@ -194,8 +211,9 @@ export const debitWallet = async (req, res, next) => {
   try {
     const { amountInKobo, description, metadata } = req.body;
 
+    const uid = req.user.user || req.user.userId;
     const transaction = await TransactionService.debitWallet(
-      req.user.userId,
+      uid,
       amountInKobo,
       description,
       metadata
