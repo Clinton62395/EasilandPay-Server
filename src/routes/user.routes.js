@@ -132,13 +132,7 @@ router.post(
  */
 
 // Refresh Token
-router.post(
-  "/refresh-token",
-  authenticate,
-  refreshTokenValidation,
-  validate,
-  AuthController.refreshToken
-);
+router.post("/refresh-token", AuthController.refreshToken);
 
 /**
  * @swagger

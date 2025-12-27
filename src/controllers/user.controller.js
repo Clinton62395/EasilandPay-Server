@@ -16,7 +16,7 @@ class AuthController {
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      user: result,
+      data: result,
     });
   });
 

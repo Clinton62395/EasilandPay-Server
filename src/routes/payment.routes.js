@@ -37,11 +37,7 @@ const router = express.Router();
  *                 message:
  *                   type: string
  */
-router.post(
-  "/webhook",
-  express.json({ type: "application/json" }),
-  paymentController.handleWebhook
-);
+router.post("/webhook", paymentController.handleWebhook);
 
 /**
  * @swagger
@@ -129,7 +125,11 @@ router.post("/initialize", authenticate, paymentController.initializePayment);
  *       400:
  *         description: Référence invalide
  */
-router.get("/verify/:reference", authenticate, paymentController.verifyPayment);
+router.get(
+  "/verify/:tx_ref",
+
+  paymentController.verifyPayment
+);
 
 /**
  * @swagger

@@ -3,8 +3,6 @@ import { AppError } from "../utils/appError.utils.js";
 import Transaction from "../models/Transaction.moddels.js";
 import Wallet from "../models/Wallet.models.js";
 
-
-
 class TransactionService {
   // ============================================
   // CREATE TRANSACTION
@@ -15,56 +13,84 @@ class TransactionService {
     session.startTransaction();
 
     try {
-      const { userId, type, amountInKobo, description, metadata } =
-        transactionData;
+      const {
+        userId,
+        type,
+        amountInKobo,
+        description,
+        metadata = {},
+        propertyId,
+        escrowAccountId,
+        paymentPlanId,
+        milestoneIndex,
+      } = transactionData;
 
       // 1. Validate amount
-      
       if (!Number.isInteger(amountInKobo) || amountInKobo <= 0) {
         throw new AppError(
-          "Invalid amount. Must be a positive integer (kobo)",
+          "Invalid amount. Must be positive integer (kobo)",
           400
         );
       }
 
-      // 2. Generate unique reference
+      // 2. Generate reference
       const reference = Transaction.generateReference(type, userId);
 
-      // 3. Check if reference exists (idempotency)
-      const exists = await Transaction.referenceExists(reference);
-      if (exists) {
-        throw new AppError("Transaction reference already exists", 409);
+      if (await Transaction.referenceExists(reference)) {
+        throw new AppError("Duplicate transaction reference", 409);
       }
 
-      // 4. Get wallet
-      const wallet = await Wallet.findOne({ userId }).session(session);
-      if (!wallet) {
-        throw new AppError("Wallet not found", 404);
+      // 3. Load wallet ONLY if required
+      const walletRelatedTypes = [
+        "WALLET_DEPOSIT",
+        "WALLET_WITHDRAWAL",
+        "COMMISSION_PAYMENT",
+        "ESCROW_DEPOSIT",
+      ];
+
+      let wallet = null;
+      let newBalance = null;
+
+      if (walletRelatedTypes.includes(type)) {
+        wallet = await Wallet.findOne({ user: userId }).session(session);
+        if (!wallet) throw new AppError("Wallet not found", 404);
       }
 
-      // 5. Check balance for DEBIT transactions
-      if (type === "DEBIT" && wallet.balanceInKobo < amountInKobo) {
+      // 4. Balance checks
+      if (
+        ["WALLET_WITHDRAWAL", "ESCROW_DEPOSIT"].includes(type) &&
+        wallet.balanceInKobo < amountInKobo
+      ) {
         throw new AppError("Insufficient wallet balance", 400);
       }
 
-      // 6. Calculate new balance
-      let newBalance = wallet.balanceInKobo;
-      if (type === "CREDIT" || type === "COMMISSION" || type === "REFUND") {
-        newBalance += amountInKobo;
-      } else if (type === "DEBIT") {
-        newBalance -= amountInKobo;
+      // 5. Balance computation
+      if (wallet) {
+        newBalance = wallet.balanceInKobo;
+
+        if (["WALLET_DEPOSIT", "COMMISSION_PAYMENT"].includes(type)) {
+          newBalance += amountInKobo;
+        }
+
+        if (["WALLET_WITHDRAWAL", "ESCROW_DEPOSIT"].includes(type)) {
+          newBalance -= amountInKobo;
+        }
       }
 
-      // 7. Create transaction
+      // 6. Create transaction
       const [transaction] = await Transaction.create(
         [
           {
-            userId,
+            user: userId,
             type,
             amountInKobo,
             reference,
             description,
             balanceAfter: newBalance,
+            propertyId,
+            escrowAccountId,
+            paymentPlanId,
+            milestoneIndex,
             metadata: {
               ...metadata,
               initiatedAt: new Date(),
@@ -74,13 +100,13 @@ class TransactionService {
         { session }
       );
 
-      // 8. Update wallet balance
-      wallet.balanceInKobo = newBalance;
-      await wallet.save({ session });
+      // 7. Update wallet if applicable
+      if (wallet) {
+        wallet.balanceInKobo = newBalance;
+        await wallet.save({ session });
+      }
 
-      // 9. Commit transaction
       await session.commitTransaction();
-
       return transaction;
     } catch (error) {
       await session.abortTransaction();
@@ -111,7 +137,7 @@ class TransactionService {
       }
 
       const wallet = await Wallet.findOne({
-        userId: transaction.userId,
+        user: transaction.user,
       }).session(session);
       if (!wallet) {
         throw new AppError("Wallet not found", 404);
@@ -129,14 +155,16 @@ class TransactionService {
       } else if (status === "FAILED") {
         transaction.metadata.failedAt = new Date();
 
-        // Revert wallet balance if transaction failed
+        // Revert wallet balance if transaction failed (mapped types)
         if (
-          transaction.type === "CREDIT" ||
-          transaction.type === "COMMISSION" ||
-          transaction.type === "REFUND"
+          ["WALLET_DEPOSIT", "COMMISSION_PAYMENT", "ESCROW_REFUND"].includes(
+            transaction.type
+          )
         ) {
           wallet.balanceInKobo -= transaction.amountInKobo;
-        } else if (transaction.type === "DEBIT") {
+        } else if (
+          ["WALLET_WITHDRAWAL", "ESCROW_DEPOSIT"].includes(transaction.type)
+        ) {
           wallet.balanceInKobo += transaction.amountInKobo;
         }
 
@@ -167,7 +195,7 @@ class TransactionService {
     }
 
     const transaction = await Transaction.findById(transactionId)
-      .populate("userId", "firstName lastName email")
+      .populate("user", "firstName lastName email")
       .populate("metadata.propertyId", "title")
       .populate("metadata.planId", "name");
 
@@ -184,7 +212,7 @@ class TransactionService {
 
   async getTransactionByReference(reference) {
     const transaction = await Transaction.findOne({ reference })
-      .populate("userId", "firstName lastName email")
+      .populate("user", "firstName lastName email")
       .populate("metadata.propertyId", "title")
       .populate("metadata.planId", "name");
 
@@ -201,7 +229,7 @@ class TransactionService {
 
   async getUserTransactions(userId, filters = {}, page = 1, limit = 20) {
     const { type, status, startDate, endDate } = filters;
-    const query = { userId };
+    const query = { user: userId };
 
     if (type) query.type = type;
     if (status) query.status = status;
@@ -243,7 +271,7 @@ class TransactionService {
     const { userId, type, status, startDate, endDate, search } = filters;
     const query = {};
 
-    if (userId) query.userId = userId;
+    if (userId) query.user = userId;
     if (type) query.type = type;
     if (status) query.status = status;
 
@@ -264,7 +292,7 @@ class TransactionService {
 
     const [transactions, total] = await Promise.all([
       Transaction.find(query)
-        .populate("userId", "firstName lastName email role")
+        .populate("user", "firstName lastName email role")
         .populate("metadata.propertyId", "title")
         .populate("metadata.planId", "name")
         .limit(parseInt(limit))
@@ -292,7 +320,7 @@ class TransactionService {
     const summary = await Transaction.aggregate([
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId),
+          user: new mongoose.Types.ObjectId(userId),
           status: "SUCCESS",
         },
       },
@@ -305,7 +333,7 @@ class TransactionService {
       },
     ]);
 
-    const wallet = await Wallet.findOne({ userId });
+    const wallet = await Wallet.findOne({ user: userId });
 
     return {
       currentBalance: wallet ? wallet.balanceInKobo : 0,
@@ -365,7 +393,7 @@ class TransactionService {
           },
         ]),
         Transaction.find()
-          .populate("userId", "firstName lastName email")
+          .populate("user", "firstName lastName email")
           .sort({ createdAt: -1 })
           .limit(10),
       ]);
@@ -385,7 +413,7 @@ class TransactionService {
   async creditWallet(userId, amountInKobo, description, metadata = {}) {
     return await this.createTransaction({
       userId,
-      type: "CREDIT",
+      type: "WALLET_DEPOSIT",
       amountInKobo,
       description: description || "Wallet funding",
       metadata,
@@ -399,7 +427,7 @@ class TransactionService {
   async debitWallet(userId, amountInKobo, description, metadata = {}) {
     return await this.createTransaction({
       userId,
-      type: "DEBIT",
+      type: "WALLET_WITHDRAWAL",
       amountInKobo,
       description: description || "Wallet debit",
       metadata,
@@ -418,7 +446,7 @@ class TransactionService {
   ) {
     return await this.createTransaction({
       userId: realtorId,
-      type: "COMMISSION",
+      type: "COMMISSION_PAYMENT",
       amountInKobo,
       description: "Commission payment",
       metadata: {
@@ -440,7 +468,7 @@ class TransactionService {
   ) {
     return await this.createTransaction({
       userId,
-      type: "REFUND",
+      type: "ESCROW_REFUND",
       amountInKobo,
       description: "Refund",
       metadata: {

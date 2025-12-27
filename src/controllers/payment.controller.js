@@ -4,36 +4,48 @@ import Transaction from "../models/Transaction.moddels.js";
 import flutterwaveService from "../services/payment.service.js";
 import transactionService from "../services/fwt.transaction.service.js";
 import userService from "../services/user.service.js";
+import User from "../models/Auth.models.js";
 
 class PaymentController {
-  // 1. TOP-UP - Simple et clair
   initializePayment = async (req, res) => {
+    console.log("🚀 initializePayment called", req.body);
     try {
-      const { amount, userId } = req.body;
-      
-      const amountInNaira = parseFloat(amount);
+      const { amount } = req.body;
+      const userId = req.user.userId;
 
-      // Récupérer l'utilisateur
-      const user = await userService.getUserById(userId);
+      if (!amount) {
+        console.log("⚠️ Amount missing in request body");
+        return res.status(400).json({ message: "Amount is required" });
+      }
+      // 🔹 Charger l'utilisateur
+      const user = await User.findById(userId).select("email fullName");
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      console.log("amout from body", req.body);
+
+      const amountInNaira = parseFloat(amount);
 
       // Créer transaction PENDING
       const transaction = await transactionService.createPendingForFlutterwave(
         userId,
-        "CREDIT",
+        "WALLET_DEPOSIT",
         amountInNaira,
         { description: `Top-up ${amountInNaira} NGN` }
       );
 
       // Initialiser le paiement
-      const paymentData = await flutterwaveService.initializePayment({
-        amountInNaira,
-        email: user.email,
-        reference: transaction.reference,
-        meta: { transactionId: transaction._id, userId },
-      });
+      const paymentData = await flutterwaveService.initializeFlutterwavePayment(
+        {
+          amountInNaira,
+          email: user.email,
+          reference: transaction.reference,
+          meta: { transactionId: transaction._id, userId },
+        }
+      );
 
       // Sauver la référence Flutterwave
-      transaction.metadata.gatewayReference = paymentData.tx_ref;
+      transaction.metadata.tx_ref = paymentData.tx_ref;
       await transaction.save();
 
       // Retour frontend
@@ -102,13 +114,20 @@ class PaymentController {
   // 4. VÉRIFICATION MANUELLE - Pour le frontend
   verifyPayment = async (req, res) => {
     try {
-      const { reference } = req.params; // Ex: /verify/FLW_CREDIT_1234567890_...
+      const { tx_ref } = req.params;
 
-      console.log(`🔍 Vérification de la transaction: ${reference}`);
+      console.log(`🔍 Vérification de la transaction: ${tx_ref}`);
+
+      if (!tx_ref) {
+        return res.status(400).json({
+          success: false,
+          message: "Référence de transaction manquante",
+        });
+      }
 
       // 1. Trouver la transaction par ta référence interne
       const transaction = await Transaction.findOne({
-        reference,
+        "metadata.tx_ref": tx_ref,
       }).populate("userId", "email");
 
       if (!transaction) {
@@ -123,6 +142,7 @@ class PaymentController {
         return res.status(200).json({
           success: true,
           data: {
+            tx_ref: transaction.metadata.tx_ref,
             status: transaction.status,
             transaction: transaction,
           },
@@ -130,62 +150,49 @@ class PaymentController {
       }
 
       // 3. Si on a une référence Flutterwave, vérifier auprès d'eux
-      if (transaction.metadata.gatewayReference) {
+      if (transaction.metadata.tx_ref) {
         console.log(
-          `Vérification avec Flutterwave: ${transaction.metadata.gatewayReference}`
+          `Vérification avec Flutterwave: ${transaction.metadata.tx_ref}`
         );
 
-        const verification = await flutterwaveService.verifyTransaction(
-          transaction.metadata.gatewayReference
+        const verification = await flutterwaveService.verifyPayment(
+          transaction.metadata.tx_ref
         );
 
-        // 4. Si Flutterwave dit "succès", traiter le paiement
-        if (verification.data.status === "successful") {
-          console.log(`✅ Flutterwave confirme le paiement`);
-
-          await transactionService.processSuccessfulPayment(
-            transaction._id,
-            verification.data
-          );
-
-          // Recharger la transaction mise à jour
-          const updatedTransaction = await Transaction.findById(
-            transaction._id
-          );
-
-          return res.status(200).json({
-            success: true,
-            data: {
-              status: "SUCCESS",
-              transaction: updatedTransaction,
-            },
-          });
-        }
-
-        // 5. Si Flutterwave dit "échec", annuler
-        if (verification.data.status === "failed") {
-          console.log(`❌ Flutterwave indique un échec`);
-
-          await transactionService.cancelPendingTransaction(
-            transaction._id,
-            `Échec confirmé par Flutterwave: ${verification.data.processor_response}`
-          );
-
-          const updatedTransaction = await Transaction.findById(
-            transaction._id
-          );
-
+        // Si le service retourne un statut d'erreur (par exemple, transaction non trouvée)
+        if (verification.status === "error") {
           return res.status(200).json({
             success: false,
             data: {
-              status: "FAILED",
-              transaction: updatedTransaction,
+              status: "PENDING",
+              message: verification.message,
+              transaction: transaction,
             },
           });
         }
+
+        // 4. Si on arrive ici, c'est que la transaction a été trouvée et est réussie
+        // (car le service lance une erreur si la transaction n'est pas réussie)
+        console.log(`✅ Flutterwave confirme le paiement`);
+
+        await transactionService.processSuccessfulPayment(
+          transaction._id,
+          verification // verification est déjà les données de la transaction
+        );
+
+        // Recharger la transaction mise à jour
+        const updatedTransaction = await Transaction.findById(transaction._id);
+
+        return res.status(200).json({
+          success: true,
+          data: {
+            status: "SUCCESS",
+            transaction: updatedTransaction,
+          },
+        });
       }
 
-      // 6. Si toujours pending après vérification
+      // 5. Si toujours pending après vérification
       return res.status(200).json({
         success: true,
         data: {
@@ -196,6 +203,14 @@ class PaymentController {
       });
     } catch (error) {
       console.error("Erreur lors de la vérification:", error);
+
+      // Si l'erreur vient du service (transaction non réussie)
+      if (error instanceof AppError) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        });
+      }
 
       return res.status(500).json({
         success: false,

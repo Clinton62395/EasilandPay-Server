@@ -33,6 +33,16 @@ walletSchema.virtual("balanceInNaira").get(function () {
   return this.balance / 100;
 });
 
+// Compatibilité : `balanceInKobo` (utilisé par les services)
+walletSchema
+  .virtual("balanceInKobo")
+  .get(function () {
+    return this.balance;
+  })
+  .set(function (val) {
+    this.balance = val;
+  });
+
 // Méthodes
 walletSchema.methods.canDebit = function (amount) {
   return this.balance >= amount;

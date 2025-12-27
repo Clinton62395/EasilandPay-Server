@@ -18,6 +18,7 @@ import authGoogle from "./routes/googleRegister.routes.js";
 import NewLetter from "./routes/newsLetter.routes.js";
 import authCommission from "./routes/commission.routes.js";
 import authPayment from "./routes/payment.routes.js";
+import { FRONTEND_URL } from "./configs/app.config.js";
 
 dotenv.config();
 
@@ -27,8 +28,21 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // ---------------------
-// GLOBAL MIDDLEWARES
-app.use(cors());
+const allowedOrigins = FRONTEND_URL;
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(helmet());
 app.use(compression());
 app.use(morgan("dev"));
@@ -62,7 +76,7 @@ app.use("/api/plan", authPlan);
 app.use("/transaction", authTransaction);
 
 //
-app.use("/payments",   authPayment);
+app.use("/payments", authPayment);
 
 // Routes for google registering management
 app.use("/api/", authGoogle);

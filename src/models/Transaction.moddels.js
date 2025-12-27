@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 // models/Transaction.js
 const transactionSchema = new mongoose.Schema({
   // **USER CONCERNÉ**
-  userId: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
@@ -122,6 +122,8 @@ const transactionSchema = new mongoose.Schema({
 
   // **METADATA ADAPTÉ**
   metadata: {
+    // reference
+    tx_ref: String,
     // Payment gateway
     paymentGateway: {
       type: String,
@@ -210,8 +212,8 @@ const transactionSchema = new mongoose.Schema({
 });
 
 // **INDEXES**
-transactionSchema.index({ userId: 1, createdAt: -1 });
-transactionSchema.index({ userId: 1, type: 1, status: 1 });
+transactionSchema.index({ user: 1, createdAt: -1 });
+transactionSchema.index({ user: 1, type: 1, status: 1 });
 transactionSchema.index({ propertyId: 1, type: 1 });
 transactionSchema.index({ escrowAccountId: 1 });
 transactionSchema.index({ reference: 1 });
@@ -231,21 +233,20 @@ transactionSchema.virtual("netAmount").get(function () {
 });
 
 // **PRE-SAVE MIDDLEWARE**
-transactionSchema.pre("save", function (next) {
+transactionSchema.pre("save", async function () {
   this.updatedAt = new Date();
 
-  // Calculer netAmount si amount et fees existent
-  if (this.amountInKobo && this.fees.totalFees !== undefined) {
+  if (this.amountInKobo && this.fees?.totalFees !== undefined) {
     this.netAmountInKobo = this.amountInKobo - this.fees.totalFees;
   }
-
-  next();
 });
 
 // **STATIC METHODS**
-transactionSchema.statics.generateReference = function (type, userId) {
+transactionSchema.statics.generateReference = function (type, user) {
   const random = Math.floor(Math.random() * 10000);
   const prefix = type.toUpperCase().substring(0, 4);
+  const userId =
+    user && user._id ? user._id.toString() : user ? user.toString() : "unknown";
   return `${prefix}_${Date.now()}_${userId}_${random}`;
 };
 

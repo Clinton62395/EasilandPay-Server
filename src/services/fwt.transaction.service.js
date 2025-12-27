@@ -45,7 +45,7 @@ class TransactionService {
       status: "PENDING", // IMPORTANT: pas de wallet update ici
       description: metadata.description || `${type} via Flutterwave`,
       metadata: {
-        paymentGateway: "flutterwave",
+        paymentGateway: "FLUTTERWAVE",
         initiatedAt: new Date(),
         ...metadata,
       },
@@ -87,7 +87,7 @@ class TransactionService {
 
         // Ajouter au solde
         wallet.balance += transaction.amountInKobo;
-        wallet.totalDeposits += transaction.amountInKobo;
+        wallet.totalDeposited += transaction.amountInKobo;
         wallet.lastTransactionAt = new Date();
         wallet.transactions.push(transaction._id);
 
